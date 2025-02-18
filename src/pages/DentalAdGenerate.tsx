@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +15,7 @@ import { Loader } from "lucide-react";
 import { StepIndicator } from "@/components/dental/StepIndicator";
 import { ServiceCard } from "@/components/dental/ServiceCard";
 import { AdPreview } from "@/components/dental/AdPreview";
+import { supabase } from "@/integrations/supabase/client";
 
 const STEPS = ["Practice Info", "Services", "Keywords", "Preview"];
 
@@ -88,6 +88,7 @@ export default function DentalAdGenerate() {
     register,
     handleSubmit,
     formState: { errors },
+    getValues,
   } = useForm<FormData>();
 
   const handleServiceToggle = (service: string) => {
@@ -101,21 +102,39 @@ export default function DentalAdGenerate() {
   };
 
   const onSubmit = async (data: FormData) => {
+    if (selectedServices.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one service",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGenerating(true);
     try {
-      // In a real implementation, this would call the Gemini API
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setGeneratedAd({
-        title: "Professional Dental Care | Your Family Dentist",
-        description:
-          "Expert dental services in your area. Free consultation, flexible scheduling. Call now!",
-        url: "www.example-dental.com",
+      // Filter out empty keywords
+      const keywords = data.keywords.filter(Boolean);
+      
+      const { data: adData, error } = await supabase.functions.invoke('generate-dental-ad', {
+        body: {
+          practiceName: data.practiceName,
+          email: data.email,
+          phone: data.phone,
+          selectedServices,
+          keywords,
+        },
       });
+
+      if (error) throw error;
+
+      setGeneratedAd(adData);
       toast({
         title: "Success!",
         description: "Your Google Ad has been generated.",
       });
     } catch (error) {
+      console.error('Error generating ad:', error);
       toast({
         title: "Error",
         description: "Failed to generate ad. Please try again.",
