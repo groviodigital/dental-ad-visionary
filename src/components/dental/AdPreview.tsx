@@ -12,6 +12,13 @@ interface AdPreviewProps {
 export const AdPreview = ({ headlines, descriptions, url }: AdPreviewProps) => {
   const [view, setView] = useState<"desktop" | "mobile">("desktop");
 
+  const formatUrl = (url: string) => {
+    // Remove http:// or https:// and trailing slash
+    return url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  };
+
+  const displayUrl = formatUrl(url);
+
   return (
     <div className="w-full max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6 animate-fadeIn">
       <Tabs defaultValue="desktop" className="w-full">
@@ -27,34 +34,62 @@ export const AdPreview = ({ headlines, descriptions, url }: AdPreviewProps) => {
         </TabsList>
         <TabsContent value="desktop" className="mt-4">
           <div className="border rounded-lg p-4 bg-white">
-            <div className="text-sm text-green-700 mb-2">{url}</div>
-            <div className="space-y-1 mb-2">
-              {headlines.map((headline, index) => (
-                <h3 key={index} className="text-blue-600 text-xl font-medium">
-                  {headline}
-                </h3>
-              ))}
+            {/* Ad Label */}
+            <div className="inline-block text-[11px] font-medium px-1 mb-1 text-[#006621] border border-[#006621] rounded">
+              Ad
             </div>
-            <div className="space-y-2">
+            {/* Display URL */}
+            <div className="text-[15px] text-[#202124] font-normal mb-1">{displayUrl}</div>
+            {/* Headlines */}
+            <div className="mb-1">
+              <h3 className="text-[20px] leading-6 text-[#1a0dab] font-normal inline">
+                {headlines.map((headline, index) => (
+                  <span key={index}>
+                    {headline}
+                    {index < headlines.length - 1 && (
+                      <span className="text-gray-500 mx-1">|</span>
+                    )}
+                  </span>
+                ))}
+              </h3>
+            </div>
+            {/* Descriptions */}
+            <div>
               {descriptions.map((description, index) => (
-                <p key={index} className="text-gray-600">{description}</p>
+                <p key={index} className="text-[14px] text-[#4d5156] leading-5">
+                  {description}
+                </p>
               ))}
             </div>
           </div>
         </TabsContent>
         <TabsContent value="mobile" className="mt-4">
           <div className="border rounded-lg p-3 bg-white max-w-[320px] mx-auto">
-            <div className="text-sm text-green-700 mb-2">{url}</div>
-            <div className="space-y-1 mb-2">
-              {headlines.map((headline, index) => (
-                <h3 key={index} className="text-blue-600 text-lg font-medium">
-                  {headline}
-                </h3>
-              ))}
+            {/* Ad Label */}
+            <div className="inline-block text-[11px] font-medium px-1 mb-1 text-[#006621] border border-[#006621] rounded">
+              Ad
             </div>
-            <div className="space-y-2">
+            {/* Display URL */}
+            <div className="text-[14px] text-[#202124] font-normal mb-1">{displayUrl}</div>
+            {/* Headlines */}
+            <div className="mb-1">
+              <h3 className="text-[18px] leading-5 text-[#1a0dab] font-normal inline">
+                {headlines.map((headline, index) => (
+                  <span key={index}>
+                    {headline}
+                    {index < headlines.length - 1 && (
+                      <span className="text-gray-500 mx-1">|</span>
+                    )}
+                  </span>
+                ))}
+              </h3>
+            </div>
+            {/* Descriptions */}
+            <div>
               {descriptions.map((description, index) => (
-                <p key={index} className="text-gray-600 text-sm">{description}</p>
+                <p key={index} className="text-[13px] text-[#4d5156] leading-5">
+                  {description}
+                </p>
               ))}
             </div>
           </div>
