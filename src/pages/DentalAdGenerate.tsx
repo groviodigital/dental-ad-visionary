@@ -75,6 +75,14 @@ interface FormData {
   keywords: string[];
 }
 
+interface DentalPractice {
+  practice_name: string;
+  email: string;
+  phone: string;
+  website: string;
+  services: string[];
+}
+
 export default function DentalAdGenerate() {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
@@ -90,7 +98,6 @@ export default function DentalAdGenerate() {
     register,
     handleSubmit,
     formState: { errors },
-    getValues,
   } = useForm<FormData>();
 
   const handleServiceToggle = (service: string) => {
@@ -118,7 +125,11 @@ export default function DentalAdGenerate() {
       // Filter out empty keywords
       const keywords = data.keywords.filter(Boolean);
       
-      const { data: adData, error } = await supabase.functions.invoke('generate-dental-ad', {
+      const { data: adData, error } = await supabase.functions.invoke<{
+        headlines: string[];
+        descriptions: string[];
+        url: string;
+      }>('generate-dental-ad', {
         body: {
           practiceName: data.practiceName,
           email: data.email,
@@ -132,15 +143,17 @@ export default function DentalAdGenerate() {
       if (error) throw error;
 
       // Save practice info to database
+      const practiceData: DentalPractice = {
+        practice_name: data.practiceName,
+        email: data.email,
+        phone: data.phone,
+        website: data.website,
+        services: selectedServices,
+      };
+
       const { error: dbError } = await supabase
         .from('dental_practices')
-        .insert([{
-          practice_name: data.practiceName,
-          email: data.email,
-          phone: data.phone,
-          website: data.website,
-          services: selectedServices,
-        }]);
+        .insert([practiceData]);
 
       if (dbError) throw dbError;
 
