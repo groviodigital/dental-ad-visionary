@@ -46,25 +46,38 @@ serve(async (req) => {
       throw new Error('GEMINI_API_KEY is not set');
     }
 
-    // Create a prompt for Gemini that will generate an optimized Google Ad
-    const prompt = `Create a Google Ad for a dental practice with the following information:
+    // Updated prompt for more comprehensive ad content
+    const prompt = `Generate a Google Ad for a dental practice with the following details:
     Practice Name: ${practiceName}
-    Services Offered: ${selectedServices.join(', ')}
-    Keywords to Target: ${keywords.join(', ')}
-    
+    Services: ${selectedServices.join(', ')}
+    Target Keywords: ${keywords.join(', ')}
+
     Create a compelling Google Ad that includes:
-    1. An attention-grabbing headline (max 30 characters)
-    2. A descriptive and engaging ad copy (max 90 characters)
-    3. A display URL that incorporates the practice name
-    
+    - 3 Headlines (each max 30 characters)
+    - 2 Descriptions (each max 90 characters)
+    - A display URL incorporating the practice name
+
     Format the response as a JSON object with these exact keys:
     {
-      "title": "your headline here",
-      "description": "your ad copy here",
-      "url": "your display URL here"
+      "headlines": [
+        "headline1 here",
+        "headline2 here",
+        "headline3 here"
+      ],
+      "descriptions": [
+        "description1 here",
+        "description2 here"
+      ],
+      "url": "display-url-here"
     }
-    
-    Important: Ensure the ad follows Google Ads best practices and character limits.`;
+
+    Important guidelines:
+    1. Headlines should be attention-grabbing and include key services
+    2. Descriptions should highlight unique value propositions and include a call to action
+    3. Use the provided keywords naturally in the ad copy
+    4. Ensure all character limits are strictly followed
+    5. Make the content compelling and professional
+    6. Include relevant services mentioned in the input`;
 
     console.log('Sending request to Gemini API...');
 
@@ -117,8 +130,10 @@ serve(async (req) => {
     }
 
     // Validate the parsed data has all required fields
-    if (!adData.title || !adData.description || !adData.url) {
-      throw new Error('Generated ad data is missing required fields');
+    if (!adData.headlines || !Array.isArray(adData.headlines) || adData.headlines.length !== 3 ||
+        !adData.descriptions || !Array.isArray(adData.descriptions) || adData.descriptions.length !== 2 ||
+        !adData.url) {
+      throw new Error('Generated ad data is missing required fields or has incorrect format');
     }
 
     return new Response(JSON.stringify(adData), {
