@@ -97,6 +97,7 @@ export default function DentalAdGenerate() {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [practiceId, setPracticeId] = useState<string | null>(null);
   const [generatedAd, setGeneratedAd] = useState<{
     headlines: string[];
     descriptions: string[];
@@ -127,16 +128,52 @@ export default function DentalAdGenerate() {
   };
 
   const formatPhoneNumber = (value: string) => {
-    // Remove all non-digits
     const digits = value.replace(/\D/g, "");
     
-    // Add dashes in the correct positions
     if (digits.length >= 6) {
       return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
     } else if (digits.length >= 3) {
       return `${digits.slice(0, 3)}-${digits.slice(3)}`;
     }
     return digits;
+  };
+
+  const savePracticeInfo = async (data: Partial<DentalPractice>) => {
+    try {
+      if (practiceId) {
+        // Update existing practice
+        const { error } = await supabase
+          .from('dental_practices')
+          .update(data)
+          .eq('id', practiceId);
+        
+        if (error) throw error;
+      } else {
+        // Create new practice
+        const { data: newPractice, error } = await supabase
+          .from('dental_practices')
+          .insert([data])
+          .select('id')
+          .single();
+        
+        if (error) throw error;
+        setPracticeId(newPractice.id);
+      }
+
+      toast({
+        title: "Success",
+        description: "Progress saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving practice info:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save progress. Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
   };
 
   const onSubmit = async (data: FormData) => {
@@ -151,7 +188,6 @@ export default function DentalAdGenerate() {
 
     setIsGenerating(true);
     try {
-      // Filter out empty keywords
       const keywords = data.keywords.filter(Boolean);
       
       const { data: adData, error } = await supabase.functions.invoke<{
@@ -170,26 +206,11 @@ export default function DentalAdGenerate() {
       });
 
       if (error) throw error;
-
-      // Save practice info to database
-      const practiceData: DentalPractice = {
-        practice_name: data.practiceName,
-        email: data.email,
-        phone: data.phone,
-        website: data.website,
-        services: selectedServices,
-      };
-
-      const { error: dbError } = await supabase
-        .from('dental_practices')
-        .insert([practiceData]);
-
-      if (dbError) throw dbError;
-
       setGeneratedAd(adData);
+      
       toast({
         title: "Success!",
-        description: "Your Google Ad has been generated and practice info saved.",
+        description: "Your Google Ad has been generated.",
       });
     } catch (error) {
       console.error('Error:', error);
@@ -351,7 +372,7 @@ export default function DentalAdGenerate() {
                 {currentStep < 3 ? (
                   <Button
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       if (currentStep === 0) {
                         // Validate practice info before moving to next step
                         const practiceInfo = watch();
@@ -372,15 +393,35 @@ export default function DentalAdGenerate() {
                           });
                           return;
                         }
+
+                        // Save initial practice info
+                        const saveSuccess = await savePracticeInfo({
+                          practice_name: practiceInfo.practiceName,
+                          email: practiceInfo.email,
+                          phone: practiceInfo.phone,
+                          website: practiceInfo.website,
+                          services: [],
+                        });
+
+                        if (!saveSuccess) return;
                       }
                       
-                      if (currentStep === 1 && selectedServices.length === 0) {
-                        toast({
-                          title: "Error",
-                          description: "Please select at least one service",
-                          variant: "destructive",
+                      if (currentStep === 1) {
+                        if (selectedServices.length === 0) {
+                          toast({
+                            title: "Error",
+                            description: "Please select at least one service",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+
+                        // Update services
+                        const saveSuccess = await savePracticeInfo({
+                          services: selectedServices,
                         });
-                        return;
+
+                        if (!saveSuccess) return;
                       }
                       
                       setCurrentStep((prev) => Math.min(3, prev + 1));
