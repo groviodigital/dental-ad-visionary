@@ -56,7 +56,10 @@ export const AdPreview = ({ headlines, descriptions, url }: AdPreviewProps) => {
             {/* Descriptions */}
             <div>
               {descriptions.map((description, index) => (
-                <p key={index} className="text-[14px] text-[#4d5156] leading-5">
+                <p 
+                  key={index} 
+                  className="text-[14px] text-[#4d5156] leading-5 break-words"
+                >
                   {description}
                 </p>
               ))}
@@ -87,7 +90,10 @@ export const AdPreview = ({ headlines, descriptions, url }: AdPreviewProps) => {
             {/* Descriptions */}
             <div>
               {descriptions.map((description, index) => (
-                <p key={index} className="text-[13px] text-[#4d5156] leading-5">
+                <p 
+                  key={index} 
+                  className="text-[13px] text-[#4d5156] leading-5 break-words"
+                >
                   {description}
                 </p>
               ))}
