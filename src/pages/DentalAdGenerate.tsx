@@ -17,6 +17,8 @@ import { StepIndicator } from "@/components/dental/StepIndicator";
 import { ServiceCard } from "@/components/dental/ServiceCard";
 import { AdPreview } from "@/components/dental/AdPreview";
 import { supabase } from "@/integrations/supabase/client";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const STEPS = ["Practice Info", "Services", "Keywords", "Preview"];
 
@@ -67,13 +69,21 @@ const SERVICES = [
   },
 ];
 
-interface FormData {
-  practiceName: string;
-  email: string;
-  phone: string;
-  website: string;
-  keywords: string[];
-}
+const formSchema = z.object({
+  practiceName: z.string().min(1, "Practice name is required"),
+  email: z.string()
+    .min(1, "Email is required")
+    .email("Invalid email format. Example: example@domain.com"),
+  phone: z.string()
+    .min(1, "Phone number is required")
+    .regex(/^\d{3}-\d{3}-\d{4}$/, "Phone must match format: XXX-XXX-XXXX"),
+  website: z.string()
+    .min(1, "Website is required")
+    .url("Please enter a valid website URL"),
+  keywords: z.array(z.string()),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 interface DentalPractice {
   practice_name: string;
@@ -98,7 +108,13 @@ export default function DentalAdGenerate() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>();
+    watch,
+  } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      keywords: ["", "", ""],
+    },
+  });
 
   const handleServiceToggle = (service: string) => {
     setSelectedServices((prev) =>
@@ -108,6 +124,19 @@ export default function DentalAdGenerate() {
         ? [...prev, service]
         : prev
     );
+  };
+
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, "");
+    
+    // Add dashes in the correct positions
+    if (digits.length >= 6) {
+      return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+    } else if (digits.length >= 3) {
+      return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+    }
+    return digits;
   };
 
   const onSubmit = async (data: FormData) => {
@@ -193,60 +222,63 @@ export default function DentalAdGenerate() {
               {currentStep === 0 && (
                 <div className="space-y-4 animate-fadeIn">
                   <div>
-                    <Label htmlFor="practiceName">Practice Name</Label>
+                    <Label htmlFor="practiceName">Practice Name *</Label>
                     <Input
                       id="practiceName"
-                      {...register("practiceName", { required: true })}
-                      className="mt-1"
+                      {...register("practiceName")}
+                      className={`mt-1 ${errors.practiceName ? 'border-red-500' : ''}`}
                       placeholder="Enter your practice name"
                     />
                     {errors.practiceName && (
                       <span className="text-sm text-red-500">
-                        Practice name is required
+                        {errors.practiceName.message}
                       </span>
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="website">Website</Label>
+                    <Label htmlFor="website">Website *</Label>
                     <Input
                       id="website"
                       type="url"
-                      {...register("website", { required: true })}
-                      className="mt-1"
+                      {...register("website")}
+                      className={`mt-1 ${errors.website ? 'border-red-500' : ''}`}
                       placeholder="https://www.yourpractice.com"
                     />
                     {errors.website && (
                       <span className="text-sm text-red-500">
-                        Website is required
+                        {errors.website.message}
                       </span>
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">Email *</Label>
                     <Input
                       id="email"
                       type="email"
-                      {...register("email", { required: true })}
-                      className="mt-1"
-                      placeholder="Enter your email"
+                      {...register("email")}
+                      className={`mt-1 ${errors.email ? 'border-red-500' : ''}`}
+                      placeholder="example@domain.com"
                     />
                     {errors.email && (
                       <span className="text-sm text-red-500">
-                        Email is required
+                        {errors.email.message}
                       </span>
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="phone">Phone</Label>
+                    <Label htmlFor="phone">Phone * (XXX-XXX-XXXX)</Label>
                     <Input
                       id="phone"
-                      {...register("phone", { required: true })}
-                      className="mt-1"
-                      placeholder="Enter your phone number"
+                      {...register("phone")}
+                      className={`mt-1 ${errors.phone ? 'border-red-500' : ''}`}
+                      placeholder="555-555-5555"
+                      onChange={(e) => {
+                        e.target.value = formatPhoneNumber(e.target.value);
+                      }}
                     />
                     {errors.phone && (
                       <span className="text-sm text-red-500">
-                        Phone is required
+                        {errors.phone.message}
                       </span>
                     )}
                   </div>
@@ -319,10 +351,40 @@ export default function DentalAdGenerate() {
                 {currentStep < 3 ? (
                   <Button
                     type="button"
-                    onClick={() => setCurrentStep((prev) => Math.min(3, prev + 1))}
-                    disabled={
-                      currentStep === 1 && selectedServices.length === 0
-                    }
+                    onClick={() => {
+                      if (currentStep === 0) {
+                        // Validate practice info before moving to next step
+                        const practiceInfo = watch();
+                        const isValid = !errors.practiceName && 
+                                      !errors.email && 
+                                      !errors.phone && 
+                                      !errors.website &&
+                                      practiceInfo.practiceName &&
+                                      practiceInfo.email &&
+                                      practiceInfo.phone &&
+                                      practiceInfo.website;
+                        
+                        if (!isValid) {
+                          toast({
+                            title: "Error",
+                            description: "Please fill out all required fields correctly",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                      }
+                      
+                      if (currentStep === 1 && selectedServices.length === 0) {
+                        toast({
+                          title: "Error",
+                          description: "Please select at least one service",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      
+                      setCurrentStep((prev) => Math.min(3, prev + 1));
+                    }}
                   >
                     Next
                   </Button>
