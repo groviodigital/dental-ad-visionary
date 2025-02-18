@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
@@ -78,8 +79,8 @@ export default function DentalAdGenerate() {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedAd, setGeneratedAd] = useState<{
-    title: string;
-    description: string;
+    headlines: string[];
+    descriptions: string[];
     url: string;
   } | null>(null);
 
@@ -301,4 +302,4 @@ export default function DentalAdGenerate() {
       </div>
     </div>
   );
-};
+}
