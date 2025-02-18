@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
@@ -85,13 +84,19 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-interface DentalPractice {
-  practice_name: string;
+interface DentalPracticeTable {
+  id?: string;
+  created_at?: string;
+  last_updated?: string;
   email: string;
   phone: string;
   website: string;
   services: string[];
+  practice_name: string;
 }
+
+type DentalPracticeCreate = Omit<DentalPracticeTable, 'id' | 'created_at' | 'last_updated'>;
+type DentalPracticeUpdate = Partial<DentalPracticeCreate>;
 
 export default function DentalAdGenerate() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -138,10 +143,9 @@ export default function DentalAdGenerate() {
     return digits;
   };
 
-  const savePracticeInfo = async (data: Partial<DentalPractice>) => {
+  const savePracticeInfo = async (data: DentalPracticeCreate | DentalPracticeUpdate) => {
     try {
       if (practiceId) {
-        // Update existing practice
         const { error } = await supabase
           .from('dental_practices')
           .update(data)
@@ -149,10 +153,10 @@ export default function DentalAdGenerate() {
         
         if (error) throw error;
       } else {
-        // Create new practice
+        const fullData = data as DentalPracticeCreate;
         const { data: newPractice, error } = await supabase
           .from('dental_practices')
-          .insert([data])
+          .insert([fullData])
           .select('id')
           .single();
         
@@ -164,6 +168,7 @@ export default function DentalAdGenerate() {
         title: "Success",
         description: "Progress saved successfully",
       });
+      return true;
     } catch (error) {
       console.error('Error saving practice info:', error);
       toast({
@@ -173,7 +178,6 @@ export default function DentalAdGenerate() {
       });
       return false;
     }
-    return true;
   };
 
   const onSubmit = async (data: FormData) => {
@@ -374,7 +378,6 @@ export default function DentalAdGenerate() {
                     type="button"
                     onClick={async () => {
                       if (currentStep === 0) {
-                        // Validate practice info before moving to next step
                         const practiceInfo = watch();
                         const isValid = !errors.practiceName && 
                                       !errors.email && 
@@ -394,7 +397,6 @@ export default function DentalAdGenerate() {
                           return;
                         }
 
-                        // Save initial practice info
                         const saveSuccess = await savePracticeInfo({
                           practice_name: practiceInfo.practiceName,
                           email: practiceInfo.email,
@@ -416,7 +418,6 @@ export default function DentalAdGenerate() {
                           return;
                         }
 
-                        // Update services
                         const saveSuccess = await savePracticeInfo({
                           services: selectedServices,
                         });
