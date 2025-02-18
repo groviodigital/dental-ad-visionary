@@ -46,38 +46,40 @@ serve(async (req) => {
       throw new Error('GEMINI_API_KEY is not set');
     }
 
-    // Updated prompt for more comprehensive ad content
+    // Updated prompt with specific character limits and format requirements
     const prompt = `Generate a Google Ad for a dental practice with the following details:
     Practice Name: ${practiceName}
     Services: ${selectedServices.join(', ')}
     Target Keywords: ${keywords.join(', ')}
 
-    Create a compelling Google Ad that includes:
-    - 3 Headlines (each max 30 characters)
-    - 2 Descriptions (each max 90 characters)
+    Create a compelling Google Ad that follows these STRICT requirements:
+    - 3 Headlines separated by '|' symbol (EXACTLY 3 headlines, each MAXIMUM 30 characters)
+    - 1 Description (MAXIMUM 90 characters)
     - A display URL incorporating the practice name
 
     Format the response as a JSON object with these exact keys:
     {
       "headlines": [
-        "headline1 here",
-        "headline2 here",
-        "headline3 here"
+        "headline1 (max 30 chars)",
+        "headline2 (max 30 chars)",
+        "headline3 (max 30 chars)"
       ],
       "descriptions": [
-        "description1 here",
-        "description2 here"
+        "description (max 90 chars)"
       ],
       "url": "display-url-here"
     }
 
-    Important guidelines:
-    1. Headlines should be attention-grabbing and include key services
-    2. Descriptions should highlight unique value propositions and include a call to action
-    3. Use the provided keywords naturally in the ad copy
-    4. Ensure all character limits are strictly followed
-    5. Make the content compelling and professional
-    6. Include relevant services mentioned in the input`;
+    Important requirements:
+    1. STRICTLY enforce character limits: 30 for headlines, 90 for description
+    2. Headlines must be separated by '|' in the final display
+    3. Make headlines attention-grabbing using selected services
+    4. Include a clear call to action in the description
+    5. Use keywords naturally in the content
+    6. Keep the tone professional and compelling
+
+    Example format of how headlines should appear:
+    "Expert Dental Care | Same Day Appointments | Visit Us Today"`;
 
     console.log('Sending request to Gemini API...');
 
@@ -129,12 +131,25 @@ serve(async (req) => {
       throw new Error('Failed to parse Gemini response as JSON');
     }
 
-    // Validate the parsed data has all required fields
+    // Validate the parsed data has all required fields and character limits
     if (!adData.headlines || !Array.isArray(adData.headlines) || adData.headlines.length !== 3 ||
-        !adData.descriptions || !Array.isArray(adData.descriptions) || adData.descriptions.length !== 2 ||
+        !adData.descriptions || !Array.isArray(adData.descriptions) || adData.descriptions.length !== 1 ||
         !adData.url) {
       throw new Error('Generated ad data is missing required fields or has incorrect format');
     }
+
+    // Validate character limits
+    if (adData.headlines.some(headline => headline.length > 30)) {
+      throw new Error('One or more headlines exceed 30 characters');
+    }
+    if (adData.descriptions[0].length > 90) {
+      throw new Error('Description exceeds 90 characters');
+    }
+
+    // Join headlines with | for display
+    adData.headlines = adData.headlines.map((headline: string) => headline.trim());
+    const displayHeadline = adData.headlines.join(' | ');
+    adData.headlines = [displayHeadline];
 
     return new Response(JSON.stringify(adData), {
       status: 200,
