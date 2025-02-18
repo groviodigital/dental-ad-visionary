@@ -12,6 +12,21 @@ const corsHeaders = {
   'Content-Type': 'application/json',
 };
 
+// Helper function to trim text to specified length
+function trimText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength - 3) + '...';
+}
+
+// Helper function to clean and format JSON text
+function cleanJsonText(text: string): string {
+  // Remove any potential markdown code blocks
+  text = text.replace(/```json\n?|\n?```/g, '');
+  // Remove any leading/trailing whitespace
+  text = text.trim();
+  return text;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -21,17 +36,6 @@ serve(async (req) => {
     });
   }
 
-  // Only allow POST method
-  if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { 
-        status: 405,
-        headers: corsHeaders,
-      }
-    );
-  }
-
   try {
     const requestData = await req.json();
     const { practiceName, website, selectedServices, keywords } = requestData;
@@ -39,11 +43,10 @@ serve(async (req) => {
     console.log('Received request data:', requestData);
     
     if (!GEMINI_API_KEY) {
-      console.error('GEMINI_API_KEY is not set');
       throw new Error('GEMINI_API_KEY is not set');
     }
 
-    if (!practiceName || !website || !selectedServices || !selectedServices.length || !keywords) {
+    if (!practiceName || !website || !selectedServices || !selectedServices.length) {
       throw new Error('Missing required fields');
     }
 
@@ -51,27 +54,21 @@ serve(async (req) => {
     Practice Name: ${practiceName}
     Website: ${website}
     Services: ${selectedServices.join(', ')}
-    Target Keywords: ${keywords.join(', ')}
+    ${keywords?.length ? `Target Keywords: ${keywords.join(', ')}` : ''}
 
     Create a compelling Google Ad that follows these STRICT requirements:
-    - Generate exactly 3 headlines, each 30 characters or less
-    - Generate 1 description with 90 characters or less
-    - Base the display URL on their website: ${website}
+    - Generate exactly 3 short headlines (each MUST be 25 characters or less)
+    - Generate exactly 1 description (MUST be 85 characters or less)
+    - Use the website as the display URL
+    - Focus on the selected services
+    - Include a clear call to action
 
-    Format your response EXACTLY as a JSON object with these specific keys:
+    Format the response as a JSON object with these exact keys:
     {
       "headlines": ["headline1", "headline2", "headline3"],
       "descriptions": ["description"],
       "url": "display-url"
-    }
-
-    Important:
-    1. Each headline must be 30 characters or less
-    2. Description must be 90 characters or less
-    3. Make content engaging and professional
-    4. Include a call to action`;
-
-    console.log('Sending request to Gemini API...');
+    }`;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
@@ -103,64 +100,54 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('Gemini API response:', JSON.stringify(data, null, 2));
+    console.log('Raw Gemini response:', data);
 
     if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
       throw new Error('Invalid response format from Gemini API');
     }
 
     const generatedText = data.candidates[0].content.parts[0].text;
-    console.log('Raw generated text:', generatedText);
+    console.log('Generated text:', generatedText);
 
-    // Try to parse the JSON response, handling both with and without code blocks
+    // Parse and clean the JSON response
     let adData;
     try {
-      // First try parsing the text directly
-      adData = JSON.parse(generatedText);
+      const cleanedText = cleanJsonText(generatedText);
+      adData = JSON.parse(cleanedText);
     } catch (e) {
-      // If that fails, try removing code blocks and parse again
-      const jsonText = generatedText.replace(/```json\n?|\n?```/g, '').trim();
-      try {
-        adData = JSON.parse(jsonText);
-      } catch (e2) {
-        console.error('Failed to parse JSON:', e2);
-        throw new Error('Could not parse Gemini response as JSON');
-      }
+      console.error('JSON parsing error:', e);
+      throw new Error('Failed to parse generated ad data');
     }
 
-    // Validate the structure of the parsed data
-    if (!adData.headlines || !Array.isArray(adData.headlines) || adData.headlines.length !== 3) {
-      throw new Error('Invalid ad data: missing or invalid headlines');
+    // Validate and format the ad data
+    if (!Array.isArray(adData.headlines) || adData.headlines.length !== 3) {
+      throw new Error('Invalid headlines format');
     }
 
-    if (!adData.descriptions || !Array.isArray(adData.descriptions) || adData.descriptions.length !== 1) {
-      throw new Error('Invalid ad data: missing or invalid description');
+    if (!Array.isArray(adData.descriptions) || adData.descriptions.length !== 1) {
+      throw new Error('Invalid descriptions format');
     }
 
     if (!adData.url) {
-      throw new Error('Invalid ad data: missing URL');
+      adData.url = website;
     }
 
-    // Validate character limits
-    if (adData.headlines.some((h: string) => h.length > 30)) {
-      throw new Error('One or more headlines exceed 30 characters');
-    }
-
-    if (adData.descriptions[0].length > 90) {
-      throw new Error('Description exceeds 90 characters');
-    }
-
-    // Format the headlines with the | separator
+    // Format and trim the content to meet requirements
     const formattedData = {
-      headlines: [adData.headlines.join(' | ')],
-      descriptions: adData.descriptions,
+      headlines: adData.headlines.map(h => trimText(String(h), 30)),
+      descriptions: [trimText(String(adData.descriptions[0]), 90)],
       url: adData.url,
     };
 
-    return new Response(JSON.stringify(formattedData), {
-      status: 200,
-      headers: corsHeaders,
-    });
+    console.log('Formatted ad data:', formattedData);
+
+    return new Response(
+      JSON.stringify(formattedData),
+      {
+        status: 200,
+        headers: corsHeaders,
+      }
+    );
   } catch (error) {
     console.error('Error in generate-dental-ad function:', error);
     return new Response(
