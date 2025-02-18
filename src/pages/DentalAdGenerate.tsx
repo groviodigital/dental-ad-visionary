@@ -71,6 +71,7 @@ interface FormData {
   practiceName: string;
   email: string;
   phone: string;
+  website: string;
   keywords: string[];
 }
 
@@ -122,6 +123,7 @@ export default function DentalAdGenerate() {
           practiceName: data.practiceName,
           email: data.email,
           phone: data.phone,
+          website: data.website,
           selectedServices,
           keywords,
         },
@@ -129,13 +131,26 @@ export default function DentalAdGenerate() {
 
       if (error) throw error;
 
+      // Save practice info to database
+      const { error: dbError } = await supabase
+        .from('dental_practices')
+        .insert([{
+          practice_name: data.practiceName,
+          email: data.email,
+          phone: data.phone,
+          website: data.website,
+          services: selectedServices,
+        }]);
+
+      if (dbError) throw dbError;
+
       setGeneratedAd(adData);
       toast({
         title: "Success!",
-        description: "Your Google Ad has been generated.",
+        description: "Your Google Ad has been generated and practice info saved.",
       });
     } catch (error) {
-      console.error('Error generating ad:', error);
+      console.error('Error:', error);
       toast({
         title: "Error",
         description: "Failed to generate ad. Please try again.",
@@ -175,6 +190,21 @@ export default function DentalAdGenerate() {
                     {errors.practiceName && (
                       <span className="text-sm text-red-500">
                         Practice name is required
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="website">Website</Label>
+                    <Input
+                      id="website"
+                      type="url"
+                      {...register("website", { required: true })}
+                      className="mt-1"
+                      placeholder="https://www.yourpractice.com"
+                    />
+                    {errors.website && (
+                      <span className="text-sm text-red-500">
+                        Website is required
                       </span>
                     )}
                   </div>

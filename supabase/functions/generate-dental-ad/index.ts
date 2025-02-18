@@ -37,25 +37,25 @@ serve(async (req) => {
   }
 
   try {
-    const { practiceName, email, phone, selectedServices, keywords } = await req.json();
+    const { practiceName, email, phone, website, selectedServices, keywords } = await req.json();
     
-    console.log('Received request data:', { practiceName, selectedServices, keywords });
+    console.log('Received request data:', { practiceName, website, selectedServices, keywords });
     
     if (!GEMINI_API_KEY) {
       console.error('GEMINI_API_KEY is not set');
       throw new Error('GEMINI_API_KEY is not set');
     }
 
-    // Updated prompt with specific character limits and format requirements
     const prompt = `Generate a Google Ad for a dental practice with the following details:
     Practice Name: ${practiceName}
+    Website: ${website}
     Services: ${selectedServices.join(', ')}
     Target Keywords: ${keywords.join(', ')}
 
     Create a compelling Google Ad that follows these STRICT requirements:
     - 3 Headlines separated by '|' symbol (EXACTLY 3 headlines, each MAXIMUM 30 characters)
     - 1 Description (MAXIMUM 90 characters)
-    - A display URL incorporating the practice name
+    - A display URL incorporating the practice name and based on their website: ${website}
 
     Format the response as a JSON object with these exact keys:
     {
@@ -77,6 +77,7 @@ serve(async (req) => {
     4. Include a clear call to action in the description
     5. Use keywords naturally in the content
     6. Keep the tone professional and compelling
+    7. Use the website domain for the display URL, but make it user-friendly
 
     Example format of how headlines should appear:
     "Expert Dental Care | Same Day Appointments | Visit Us Today"`;
