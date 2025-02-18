@@ -58,7 +58,7 @@ export const AdPreview = ({ headlines, descriptions, url }: AdPreviewProps) => {
               {descriptions.map((description, index) => (
                 <p 
                   key={index} 
-                  className="text-[14px] text-[#4d5156] leading-5 break-words"
+                  className="text-[14px] text-[#4d5156] leading-5 whitespace-normal break-words w-full overflow-visible"
                 >
                   {description}
                 </p>
@@ -92,7 +92,7 @@ export const AdPreview = ({ headlines, descriptions, url }: AdPreviewProps) => {
               {descriptions.map((description, index) => (
                 <p 
                   key={index} 
-                  className="text-[13px] text-[#4d5156] leading-5 break-words"
+                  className="text-[13px] text-[#4d5156] leading-5 whitespace-normal break-words w-full overflow-visible"
                 >
                   {description}
                 </p>
