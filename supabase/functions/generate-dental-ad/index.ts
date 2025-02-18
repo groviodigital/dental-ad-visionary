@@ -6,13 +6,34 @@ const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Max-Age': '86400',
+  'Content-Type': 'application/json',
 };
 
 serve(async (req) => {
+  // Always log the request method and headers for debugging
+  console.log('Request method:', req.method);
+  console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders,
+    });
+  }
+
+  // Only allow POST method
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed' }),
+      { 
+        status: 405,
+        headers: corsHeaders,
+      }
+    );
   }
 
   try {
@@ -21,6 +42,7 @@ serve(async (req) => {
     console.log('Received request data:', { practiceName, selectedServices, keywords });
     
     if (!GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY is not set');
       throw new Error('GEMINI_API_KEY is not set');
     }
 
@@ -100,7 +122,8 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify(adData), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+      headers: corsHeaders,
     });
   } catch (error) {
     console.error('Error in generate-dental-ad function:', error);
@@ -111,7 +134,7 @@ serve(async (req) => {
       }),
       { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: corsHeaders,
       }
     );
   }
