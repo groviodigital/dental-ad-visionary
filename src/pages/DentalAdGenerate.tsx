@@ -1,9 +1,8 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -13,101 +12,21 @@ import {
 } from "@/components/ui/card";
 import { Loader } from "lucide-react";
 import { StepIndicator } from "@/components/dental/StepIndicator";
-import { ServiceCard } from "@/components/dental/ServiceCard";
 import { AdPreview } from "@/components/dental/AdPreview";
+import { PracticeInfoForm } from "@/components/dental/PracticeInfoForm";
+import { ServicesSelection } from "@/components/dental/ServicesSelection";
+import { KeywordsForm } from "@/components/dental/KeywordsForm";
 import { supabase } from "@/integrations/supabase/client";
-import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-
-const STEPS = ["Practice Info", "Services", "Keywords", "Preview"];
-
-const SERVICES = [
-  {
-    name: "General Dentistry",
-    description: "Comprehensive dental care for the whole family",
-  },
-  {
-    name: "Preventive Care",
-    description: "Regular checkups and cleanings to maintain oral health",
-  },
-  {
-    name: "Cosmetic Dentistry",
-    description: "Transform your smile with aesthetic dental procedures",
-  },
-  {
-    name: "Restorative Dentistry",
-    description: "Repair and restore damaged or missing teeth",
-  },
-  {
-    name: "Dental Implants",
-    description: "Permanent solution for missing teeth",
-  },
-  {
-    name: "Orthodontics",
-    description: "Straighten teeth and correct bite issues",
-  },
-  {
-    name: "Pediatric Dentistry",
-    description: "Specialized dental care for children",
-  },
-  {
-    name: "Gum Care",
-    description: "Treatment for periodontal disease and gum health",
-  },
-  {
-    name: "Oral Surgery",
-    description: "Surgical procedures for complex dental issues",
-  },
-  {
-    name: "Emergency Dentistry",
-    description: "Immediate care for dental emergencies",
-  },
-  {
-    name: "Specialty Services",
-    description: "Advanced dental procedures and treatments",
-  },
-];
-
-const formSchema = z.object({
-  practiceName: z.string().min(1, "Practice name is required"),
-  email: z.string()
-    .min(1, "Email is required")
-    .email("Invalid email format. Example: example@domain.com"),
-  phone: z.string()
-    .min(1, "Phone number is required")
-    .regex(/^\d{3}-\d{3}-\d{4}$/, "Phone must match format: XXX-XXX-XXXX"),
-  website: z.string()
-    .min(1, "Website is required")
-    .url("Please enter a valid website URL"),
-  keywords: z.array(z.string()),
-});
-
-type FormData = z.infer<typeof formSchema>;
-
-interface DentalPracticeTable {
-  id?: string;
-  created_at?: string;
-  last_updated?: string;
-  email: string;
-  phone: string;
-  website: string;
-  services: string[];
-  practice_name: string;
-}
-
-type DentalPracticeCreate = Omit<DentalPracticeTable, 'id' | 'created_at' | 'last_updated'>;
-type DentalPracticeUpdate = Partial<DentalPracticeCreate>;
+import { formSchema, type FormData } from "@/components/dental/schema";
+import { STEPS, type DentalPracticeCreate, type DentalPracticeUpdate, type GeneratedAd } from "@/types/dental";
 
 export default function DentalAdGenerate() {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [practiceId, setPracticeId] = useState<string | null>(null);
-  const [generatedAd, setGeneratedAd] = useState<{
-    headlines: string[];
-    descriptions: string[];
-    url: string;
-  } | null>(null);
+  const [generatedAd, setGeneratedAd] = useState<GeneratedAd | null>(null);
 
   const { toast } = useToast();
   const {
@@ -194,11 +113,7 @@ export default function DentalAdGenerate() {
     try {
       const keywords = data.keywords.filter(Boolean);
       
-      const { data: adData, error } = await supabase.functions.invoke<{
-        headlines: string[];
-        descriptions: string[];
-        url: string;
-      }>('generate-dental-ad', {
+      const { data: adData, error } = await supabase.functions.invoke<GeneratedAd>('generate-dental-ad', {
         body: {
           practiceName: data.practiceName,
           email: data.email,
@@ -228,6 +143,43 @@ export default function DentalAdGenerate() {
     }
   };
 
+  const renderStep = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <PracticeInfoForm
+            register={register}
+            errors={errors}
+            formatPhoneNumber={formatPhoneNumber}
+          />
+        );
+      case 1:
+        return (
+          <ServicesSelection
+            selectedServices={selectedServices}
+            onServiceToggle={handleServiceToggle}
+          />
+        );
+      case 2:
+        return <KeywordsForm register={register} />;
+      case 3:
+        return generatedAd ? (
+          <AdPreview {...generatedAd} />
+        ) : (
+          <div className="text-center py-8">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Ready to generate your ad
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Click generate to create your optimized Google Ad
+            </p>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
@@ -244,125 +196,7 @@ export default function DentalAdGenerate() {
             <StepIndicator currentStep={currentStep} steps={STEPS} />
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {currentStep === 0 && (
-                <div className="space-y-4 animate-fadeIn">
-                  <div>
-                    <Label htmlFor="practiceName">Practice Name *</Label>
-                    <Input
-                      id="practiceName"
-                      {...register("practiceName")}
-                      className={`mt-1 ${errors.practiceName ? 'border-red-500' : ''}`}
-                      placeholder="Enter your practice name"
-                    />
-                    {errors.practiceName && (
-                      <span className="text-sm text-red-500">
-                        {errors.practiceName.message}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="website">Website *</Label>
-                    <Input
-                      id="website"
-                      type="url"
-                      {...register("website")}
-                      className={`mt-1 ${errors.website ? 'border-red-500' : ''}`}
-                      placeholder="https://www.yourpractice.com"
-                    />
-                    {errors.website && (
-                      <span className="text-sm text-red-500">
-                        {errors.website.message}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      {...register("email")}
-                      className={`mt-1 ${errors.email ? 'border-red-500' : ''}`}
-                      placeholder="example@domain.com"
-                    />
-                    {errors.email && (
-                      <span className="text-sm text-red-500">
-                        {errors.email.message}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Phone * (XXX-XXX-XXXX)</Label>
-                    <Input
-                      id="phone"
-                      {...register("phone")}
-                      className={`mt-1 ${errors.phone ? 'border-red-500' : ''}`}
-                      placeholder="555-555-5555"
-                      onChange={(e) => {
-                        e.target.value = formatPhoneNumber(e.target.value);
-                      }}
-                    />
-                    {errors.phone && (
-                      <span className="text-sm text-red-500">
-                        {errors.phone.message}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {currentStep === 1 && (
-                <div className="animate-fadeIn">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    Select up to 3 services
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {SERVICES.map((service) => (
-                      <ServiceCard
-                        key={service.name}
-                        service={service.name}
-                        description={service.description}
-                        selected={selectedServices.includes(service.name)}
-                        onClick={() => handleServiceToggle(service.name)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {currentStep === 2 && (
-                <div className="space-y-4 animate-fadeIn">
-                  <div>
-                    <Label>Keywords (up to 3)</Label>
-                    <div className="grid grid-cols-1 gap-4">
-                      {[0, 1, 2].map((index) => (
-                        <Input
-                          key={index}
-                          {...register(`keywords.${index}`)}
-                          placeholder={`Keyword ${index + 1}`}
-                          className="mt-1"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {currentStep === 3 && (
-                <div className="animate-fadeIn">
-                  {generatedAd ? (
-                    <AdPreview {...generatedAd} />
-                  ) : (
-                    <div className="text-center py-8">
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        Ready to generate your ad
-                      </h3>
-                      <p className="text-gray-600 mb-4">
-                        Click generate to create your optimized Google Ad
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
+              {renderStep()}
 
               <div className="flex justify-between mt-8">
                 <Button
