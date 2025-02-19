@@ -1,8 +1,8 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronRight, CheckCircle2, Clock, DollarSign, Activity, Users, Building, ChartBar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import LogoSlider from "@/components/LogoSlider";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -46,6 +46,16 @@ export default function Index() {
           </div>
         </div>
       </header>
+
+      {/* Logo Slider Section */}
+      <section className="bg-white border-y border-gray-100">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-semibold text-center text-gray-900 mb-8">
+            Trusted by Leading Dental Practices
+          </h2>
+          <LogoSlider />
+        </div>
+      </section>
 
       {/* Stats Section */}
       <section className="bg-white py-16">
