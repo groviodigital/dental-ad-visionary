@@ -12,8 +12,8 @@ const LogoSlider = () => {
     let position = 0;
 
     const animate = () => {
-      position -= 0.2; // Reduced speed from 0.5 to 0.2
-      if (position <= -100) { // Changed from -50 to -100 for full width
+      position -= 0.1; // Made even slower (from 0.2 to 0.1)
+      if (position <= -50) { // Reset halfway through for seamless loop
         position = 0;
       }
       if (slider) {
@@ -44,8 +44,8 @@ const LogoSlider = () => {
     }
   ];
 
-  // Duplicate logos for seamless infinite scroll
-  const allLogos = [...logos, ...logos];
+  // Duplicate logos multiple times to ensure no gaps
+  const allLogos = [...logos, ...logos, ...logos, ...logos];
 
   return (
     <div className="w-full overflow-hidden bg-white py-12">
@@ -53,7 +53,7 @@ const LogoSlider = () => {
         <div
           ref={sliderRef}
           className="flex gap-16 transition-transform duration-100 ease-linear"
-          style={{ width: "200%" }}
+          style={{ width: "400%" }} // Increased width to accommodate more logo copies
         >
           {allLogos.map((logo, index) => (
             <div
