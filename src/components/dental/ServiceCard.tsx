@@ -20,14 +20,14 @@ export const ServiceCard = ({
       className={cn(
         "p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 transform hover:scale-[1.02]",
         selected
-          ? "border-primary bg-primary bg-opacity-5"
-          : "border-gray-200 hover:border-primary hover:bg-gray-50"
+          ? "border-grovio-teal bg-gradient-to-r from-grovio-lime/10 to-grovio-teal/10"
+          : "border-gray-200 hover:border-grovio-teal hover:bg-gray-50"
       )}
     >
       <h3
         className={cn(
           "font-semibold mb-2",
-          selected ? "text-primary" : "text-gray-700"
+          selected ? "text-grovio-teal" : "text-gray-700"
         )}
       >
         {service}

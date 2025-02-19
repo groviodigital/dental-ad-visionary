@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
@@ -136,7 +135,6 @@ export default function DentalAdGenerate() {
 
     setIsGenerating(true);
     try {
-      // Filter out empty keywords
       const keywords = data.keywords.filter(Boolean);
       
       const { data: adData, error } = await supabase.functions.invoke<{
@@ -156,7 +154,6 @@ export default function DentalAdGenerate() {
 
       if (error) throw error;
 
-      // Save practice info to database
       const practiceData: DentalPractice = {
         practice_name: data.practiceName,
         email: data.email,
@@ -192,12 +189,19 @@ export default function DentalAdGenerate() {
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <Card className="w-full">
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold text-gray-900">
+          <CardHeader className="text-center relative pb-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <img 
+                src="/lovable-uploads/b3267bc4-a988-4b24-9076-8eae1d042ef9.png" 
+                alt="Grovio Logo" 
+                className="h-12 w-auto"
+              />
+            </div>
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-grovio-lime to-grovio-teal bg-clip-text text-transparent">
               Dental Google Ad Generator
             </CardTitle>
             <CardDescription className="mt-2 text-gray-600">
-              Create optimized Google Ads for your dental practice in minutes
+              Grow your vision with precision
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -342,6 +346,7 @@ export default function DentalAdGenerate() {
                   variant="outline"
                   onClick={() => setCurrentStep((prev) => Math.max(0, prev - 1))}
                   disabled={currentStep === 0}
+                  className="border-grovio-teal text-grovio-teal hover:bg-grovio-teal/10"
                 >
                   Previous
                 </Button>
@@ -349,39 +354,42 @@ export default function DentalAdGenerate() {
                   <Button
                     type="button"
                     onClick={() => {
-                      if (currentStep === 0) {
-                        const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-                        const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
-                        const email = (document.getElementById('email') as HTMLInputElement)?.value;
-                        const phone = (document.getElementById('phone') as HTMLInputElement)?.value;
+                      const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+                      const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
+                      const email = (document.getElementById('email') as HTMLInputElement)?.value;
+                      const phone = (document.getElementById('phone') as HTMLInputElement)?.value;
 
-                        if (!email || !emailRegex.test(email)) {
-                          toast({
-                            title: "Error",
-                            description: "Please enter a valid email address",
-                            variant: "destructive",
-                          });
-                          return;
-                        }
+                      if (!email || !emailRegex.test(email)) {
+                        toast({
+                          title: "Error",
+                          description: "Please enter a valid email address",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
 
-                        if (!phone || !phoneRegex.test(phone)) {
-                          toast({
-                            title: "Error",
-                            description: "Please enter a valid phone number (XXX-XXX-XXXX)",
-                            variant: "destructive",
-                          });
-                          return;
-                        }
+                      if (!phone || !phoneRegex.test(phone)) {
+                        toast({
+                          title: "Error",
+                          description: "Please enter a valid phone number (XXX-XXX-XXXX)",
+                          variant: "destructive",
+                        });
+                        return;
                       }
                       
                       setCurrentStep((prev) => Math.min(3, prev + 1));
                     }}
                     disabled={currentStep === 1 && selectedServices.length === 0}
+                    className="bg-gradient-to-r from-grovio-lime to-grovio-teal text-white hover:opacity-90"
                   >
                     Next
                   </Button>
                 ) : (
-                  <Button type="submit" disabled={isGenerating}>
+                  <Button 
+                    type="submit" 
+                    disabled={isGenerating}
+                    className="bg-gradient-to-r from-grovio-lime to-grovio-teal text-white hover:opacity-90"
+                  >
                     {isGenerating ? (
                       <>
                         <Loader className="mr-2 h-4 w-4 animate-spin" />

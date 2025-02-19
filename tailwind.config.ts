@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -25,6 +24,10 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        grovio: {
+          lime: "#4AE137",
+          teal: "#14B8B8",
+        },
         primary: {
           DEFAULT: "#4FD1C5",
           hover: "#38B2AC",
@@ -78,6 +81,9 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         fadeIn: "fadeIn 0.5s ease-out",
         slideUp: "slideUp 0.5s ease-out",
+      },
+      backgroundImage: {
+        'grovio-gradient': 'linear-gradient(to bottom, #4AE137, #14B8B8)',
       },
     },
   },
