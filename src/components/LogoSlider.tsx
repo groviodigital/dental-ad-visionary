@@ -12,8 +12,8 @@ const LogoSlider = () => {
     let position = 0;
 
     const animate = () => {
-      position -= 0.5;
-      if (position <= -50) {
+      position -= 0.2; // Reduced speed from 0.5 to 0.2
+      if (position <= -100) { // Changed from -50 to -100 for full width
         position = 0;
       }
       if (slider) {
