@@ -100,7 +100,14 @@ export default function DentalAdGenerate() {
   };
 
   const onSubmit = async (data: FormData) => {
+    console.log('Starting ad generation with data:', {
+      practiceName: data.practiceName,
+      selectedServices,
+      keywordsCount: data.keywords.filter(Boolean).length
+    });
+
     if (selectedServices.length === 0) {
+      console.log('No services selected, showing error');
       toast({
         title: "Error",
         description: "Please select at least one service",
@@ -112,7 +119,9 @@ export default function DentalAdGenerate() {
     setIsGenerating(true);
     try {
       const keywords = data.keywords.filter(Boolean);
+      console.log('Filtered keywords:', keywords);
       
+      console.log('Calling generate-dental-ad function...');
       const { data: adData, error } = await supabase.functions.invoke<GeneratedAd>('generate-dental-ad', {
         body: {
           practiceName: data.practiceName,
@@ -124,7 +133,12 @@ export default function DentalAdGenerate() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
+
+      console.log('Generated ad data:', adData);
       setGeneratedAd(adData);
       
       toast({
@@ -132,7 +146,7 @@ export default function DentalAdGenerate() {
         description: "Your Google Ad has been generated.",
       });
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error in ad generation:', error);
       toast({
         title: "Error",
         description: "Failed to generate ad. Please try again.",
