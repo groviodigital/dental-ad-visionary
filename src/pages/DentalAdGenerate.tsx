@@ -359,22 +359,24 @@ export default function DentalAdGenerate() {
                       const email = (document.getElementById('email') as HTMLInputElement)?.value;
                       const phone = (document.getElementById('phone') as HTMLInputElement)?.value;
 
-                      if (!email || !emailRegex.test(email)) {
-                        toast({
-                          title: "Error",
-                          description: "Please enter a valid email address",
-                          variant: "destructive",
-                        });
-                        return;
-                      }
+                      if (currentStep === 0) {
+                        if (!email || !emailRegex.test(email)) {
+                          toast({
+                            title: "Error",
+                            description: "Please enter a valid email address",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
 
-                      if (!phone || !phoneRegex.test(phone)) {
-                        toast({
-                          title: "Error",
-                          description: "Please enter a valid phone number (XXX-XXX-XXXX)",
-                          variant: "destructive",
-                        });
-                        return;
+                        if (!phone || !phoneRegex.test(phone)) {
+                          toast({
+                            title: "Error",
+                            description: "Please enter a valid phone number (XXX-XXX-XXXX)",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
                       }
                       
                       setCurrentStep((prev) => Math.min(3, prev + 1));
