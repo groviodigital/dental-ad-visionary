@@ -93,6 +93,9 @@ interface DentalPractice {
   services: string[];
 }
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
+
 export default function DentalAdGenerate() {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
@@ -109,6 +112,7 @@ export default function DentalAdGenerate() {
     handleSubmit,
     formState: { errors },
     watch,
+    getValues,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -127,10 +131,7 @@ export default function DentalAdGenerate() {
   };
 
   const formatPhoneNumber = (value: string) => {
-    // Remove all non-digits
     const digits = value.replace(/\D/g, "");
-    
-    // Add dashes in the correct positions
     if (digits.length >= 6) {
       return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
     } else if (digits.length >= 3) {
@@ -139,19 +140,12 @@ export default function DentalAdGenerate() {
     return digits;
   };
 
-  const onSubmit = async (data: FormData) => {
-    if (selectedServices.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select at least one service",
-        variant: "destructive",
-      });
-      return;
-    }
+  // Function to delay execution
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-    setIsGenerating(true);
+  // Function to generate ad with retries
+  const generateAdWithRetry = async (data: FormData, retryCount = 0): Promise<any> => {
     try {
-      // Filter out empty keywords
       const keywords = data.keywords.filter(Boolean);
       
       const { data: adData, error } = await supabase.functions.invoke<{
@@ -170,29 +164,43 @@ export default function DentalAdGenerate() {
       });
 
       if (error) throw error;
+      return adData;
+    } catch (error) {
+      console.error(`Attempt ${retryCount + 1} failed:`, error);
+      
+      if (retryCount < MAX_RETRIES) {
+        await delay(RETRY_DELAY * (retryCount + 1)); // Exponential backoff
+        return generateAdWithRetry(data, retryCount + 1);
+      }
+      throw error;
+    }
+  };
 
-      // Save practice info to database
-      const practiceData: DentalPractice = {
-        practice_name: data.practiceName,
-        email: data.email,
-        phone: data.phone,
-        website: data.website,
-        services: selectedServices,
-      };
+  const onSubmit = async (data: FormData) => {
+    if (selectedServices.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one service",
+        variant: "destructive",
+      });
+      return;
+    }
 
-      const { error: dbError } = await supabase
-        .from('dental_practices')
-        .insert([practiceData]);
-
-      if (dbError) throw dbError;
+    setIsGenerating(true);
+    try {
+      // Save current form state
+      const currentFormData = getValues();
+      
+      // Generate ad with retry mechanism
+      const adData = await generateAdWithRetry(currentFormData);
 
       setGeneratedAd(adData);
       toast({
         title: "Success!",
-        description: "Your Google Ad has been generated and practice info saved.",
+        description: "Your Google Ad has been generated.",
       });
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error in ad generation:', error);
       toast({
         title: "Error",
         description: "Failed to generate ad. Please try again.",
@@ -353,7 +361,6 @@ export default function DentalAdGenerate() {
                     type="button"
                     onClick={() => {
                       if (currentStep === 0) {
-                        // Validate practice info before moving to next step
                         const practiceInfo = watch();
                         const isValid = !errors.practiceName && 
                                       !errors.email && 
