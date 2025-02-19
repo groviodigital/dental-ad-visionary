@@ -98,7 +98,11 @@ export default function DentalAdGenerate() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>();
+  } = useForm<FormData>({
+    defaultValues: {
+      keywords: ["", "", ""],
+    },
+  });
 
   const handleServiceToggle = (service: string) => {
     setSelectedServices((prev) =>
@@ -108,6 +112,16 @@ export default function DentalAdGenerate() {
         ? [...prev, service]
         : prev
     );
+  };
+
+  const formatPhoneNumber = (value: string) => {
+    const digits = value.replace(/\D/g, "");
+    if (digits.length >= 6) {
+      return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+    } else if (digits.length >= 3) {
+      return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+    }
+    return digits;
   };
 
   const onSubmit = async (data: FormData) => {
@@ -222,31 +236,46 @@ export default function DentalAdGenerate() {
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">Email *</Label>
                     <Input
                       id="email"
                       type="email"
-                      {...register("email", { required: true })}
-                      className="mt-1"
-                      placeholder="Enter your email"
+                      {...register("email", {
+                        required: "Email is required",
+                        pattern: {
+                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                          message: "Invalid email address"
+                        }
+                      })}
+                      className={`mt-1 ${errors.email ? 'border-red-500' : ''}`}
+                      placeholder="example@domain.com"
                     />
                     {errors.email && (
                       <span className="text-sm text-red-500">
-                        Email is required
+                        {errors.email.message}
                       </span>
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="phone">Phone</Label>
+                    <Label htmlFor="phone">Phone * (XXX-XXX-XXXX)</Label>
                     <Input
                       id="phone"
-                      {...register("phone", { required: true })}
-                      className="mt-1"
-                      placeholder="Enter your phone number"
+                      {...register("phone", {
+                        required: "Phone number is required",
+                        pattern: {
+                          value: /^\d{3}-\d{3}-\d{4}$/,
+                          message: "Phone must match format: XXX-XXX-XXXX"
+                        }
+                      })}
+                      className={`mt-1 ${errors.phone ? 'border-red-500' : ''}`}
+                      placeholder="555-555-5555"
+                      onChange={(e) => {
+                        e.target.value = formatPhoneNumber(e.target.value);
+                      }}
                     />
                     {errors.phone && (
                       <span className="text-sm text-red-500">
-                        Phone is required
+                        {errors.phone.message}
                       </span>
                     )}
                   </div>
@@ -319,10 +348,35 @@ export default function DentalAdGenerate() {
                 {currentStep < 3 ? (
                   <Button
                     type="button"
-                    onClick={() => setCurrentStep((prev) => Math.min(3, prev + 1))}
-                    disabled={
-                      currentStep === 1 && selectedServices.length === 0
-                    }
+                    onClick={() => {
+                      if (currentStep === 0) {
+                        const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+                        const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
+                        const email = (document.getElementById('email') as HTMLInputElement)?.value;
+                        const phone = (document.getElementById('phone') as HTMLInputElement)?.value;
+
+                        if (!email || !emailRegex.test(email)) {
+                          toast({
+                            title: "Error",
+                            description: "Please enter a valid email address",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+
+                        if (!phone || !phoneRegex.test(phone)) {
+                          toast({
+                            title: "Error",
+                            description: "Please enter a valid phone number (XXX-XXX-XXXX)",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                      }
+                      
+                      setCurrentStep((prev) => Math.min(3, prev + 1));
+                    }}
+                    disabled={currentStep === 1 && selectedServices.length === 0}
                   >
                     Next
                   </Button>
