@@ -117,6 +117,8 @@ export default function DentalAdGenerate() {
     }
 
     setIsGenerating(true);
+    setGeneratedAd(null); // Reset any previous ad
+
     try {
       const keywords = data.keywords.filter(Boolean);
       console.log('Filtered keywords:', keywords);
@@ -136,6 +138,10 @@ export default function DentalAdGenerate() {
       if (error) {
         console.error('Edge function error:', error);
         throw error;
+      }
+
+      if (!adData || !adData.headlines || !adData.descriptions) {
+        throw new Error('Invalid ad data received');
       }
 
       console.log('Generated ad data:', adData);
