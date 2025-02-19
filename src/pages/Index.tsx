@@ -2,14 +2,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronRight, CheckCircle2, Clock, DollarSign, Activity, Users, Building, ChartBar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
 export default function Index() {
   const navigate = useNavigate();
-  return <div className="min-h-screen bg-gray-50">
+
+  return (
+    <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <header className="relative overflow-hidden bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
-            <img alt="Grovio Logo" className="h-16 mx-auto mb-8" src="/lovable-uploads/c210e479-b641-439a-828d-aa2f6c492ee9.png" />
+            <img 
+              src="/lovable-uploads/c210e479-b641-439a-828d-aa2f6c492ee9.png" 
+              alt="Grovio Logo" 
+              className="h-16 mx-auto mb-8"
+            />
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
               <span className="block">Transform Your</span>
               <span className="block bg-gradient-to-r from-grovio-lime to-grovio-teal bg-clip-text text-transparent">
@@ -179,5 +186,6 @@ export default function Index() {
           </div>
         </div>
       </section>
-    </div>;
+    </div>
+  );
 }
