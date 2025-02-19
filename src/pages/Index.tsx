@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronRight, CheckCircle2, Clock, DollarSign, Activity, Users, Building, ChartBar } from "lucide-react";
@@ -31,6 +32,16 @@ export default function Index() {
               <Button onClick={() => navigate("/dental-google-ad-generate")} className="bg-gradient-to-r from-grovio-lime to-grovio-teal text-white hover:opacity-90 text-lg px-8 py-6">
                 Try Free Generator <ChevronRight className="ml-2" />
               </Button>
+            </div>
+            <div className="mt-12 flex justify-center">
+              <div className="relative max-w-[300px] shadow-2xl rounded-3xl">
+                <img 
+                  src="/lovable-uploads/853fa172-b866-4e96-b8a6-2c2e61d7e4f3.png" 
+                  alt="Google Ads Preview" 
+                  className="w-full rounded-3xl"
+                />
+                <div className="absolute inset-0 rounded-3xl ring-1 ring-black/10"></div>
+              </div>
             </div>
           </div>
         </div>
