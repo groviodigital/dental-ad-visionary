@@ -12,7 +12,7 @@ const LogoSlider = () => {
     let position = 0;
 
     const animate = () => {
-      position -= 0.1; // Made even slower (from 0.2 to 0.1)
+      position -= 0.02; // Made much slower (from 0.1 to 0.02)
       if (position <= -50) { // Reset halfway through for seamless loop
         position = 0;
       }
