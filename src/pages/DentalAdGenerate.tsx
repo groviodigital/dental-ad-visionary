@@ -192,7 +192,7 @@ export default function DentalAdGenerate() {
           <CardHeader className="text-center relative pb-8">
             <div className="flex items-center justify-center gap-3 mb-4">
               <img 
-                src="/lovable-uploads/b3267bc4-a988-4b24-9076-8eae1d042ef9.png" 
+                src="/grovio-logo.png" 
                 alt="Grovio Logo" 
                 className="h-12 w-auto"
               />

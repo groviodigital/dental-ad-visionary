@@ -14,7 +14,7 @@ export default function Index() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <img 
-              src="/lovable-uploads/b3267bc4-a988-4b24-9076-8eae1d042ef9.png" 
+              src="/grovio-logo.png" 
               alt="Grovio Logo" 
               className="h-16 mx-auto mb-8"
             />
