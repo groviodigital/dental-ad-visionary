@@ -11,8 +11,10 @@ import { StepIndicator } from "@/components/dental/StepIndicator";
 import { AdPreview } from "@/components/dental/AdPreview";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+
 const STEPS = ["Practice Info", "Keywords", "Preview"];
 const SERVICES = ["General Dentistry", "Preventive Care", "Cosmetic Dentistry", "Restorative Dentistry", "Dental Implants", "Orthodontics", "Pediatric Dentistry", "Gum Care", "Oral Surgery", "Emergency Dentistry", "Specialty Services"];
+
 interface FormData {
   practiceName: string;
   website: string;
@@ -20,7 +22,9 @@ interface FormData {
   email?: string;
   keywords: string[];
 }
+
 type DentalPractice = Database['public']['Tables']['dental_practices']['Insert'];
+
 export default function DentalAdGenerate() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -30,30 +34,25 @@ export default function DentalAdGenerate() {
     url: string;
   } | null>(null);
   const [showEmailForm, setShowEmailForm] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const {
     register,
     handleSubmit,
     setValue,
     watch,
-    formState: {
-      errors
-    }
+    formState: { errors }
   } = useForm<FormData>({
     defaultValues: {
       keywords: ["", "", ""]
     }
   });
 
-  // Function to handle going back
   const handlePrevious = () => {
-    // Reset the generated ad and email form when going back
     setGeneratedAd(null);
     setShowEmailForm(false);
     setCurrentStep(prev => Math.max(0, prev - 1));
   };
+
   const onSubmit = async (data: FormData) => {
     if (!data.service) {
       toast({
@@ -97,7 +96,7 @@ export default function DentalAdGenerate() {
           email: data.email,
           website: data.website,
           services: [data.service],
-          phone: null // Set to null since it's optional
+          phone: null
         };
         const {
           error: dbError
@@ -124,6 +123,7 @@ export default function DentalAdGenerate() {
       setIsGenerating(false);
     }
   };
+
   return <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <Card className="w-full">
@@ -231,7 +231,7 @@ export default function DentalAdGenerate() {
                     {isGenerating ? <>
                         <Loader className="mr-2 h-4 w-4 animate-spin" />
                         Generating
-                      </> : showEmailForm ? "Save Ad" : "Generate Ad"}
+                      </> : showEmailForm ? "Publish Your First Ad" : "Generate Ad"}
                   </Button>}
               </div>
             </form>
