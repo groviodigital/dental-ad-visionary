@@ -15,7 +15,7 @@ export type Database = {
           email: string
           id: string
           last_updated: string | null
-          phone: string
+          phone: string | null
           practice_name: string
           services: string[]
           website: string
@@ -25,7 +25,7 @@ export type Database = {
           email: string
           id?: string
           last_updated?: string | null
-          phone: string
+          phone?: string | null
           practice_name: string
           services: string[]
           website: string
@@ -35,7 +35,7 @@ export type Database = {
           email?: string
           id?: string
           last_updated?: string | null
-          phone?: string
+          phone?: string | null
           practice_name?: string
           services?: string[]
           website?: string

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
@@ -96,7 +97,7 @@ export default function DentalAdGenerate() {
           email: data.email,
           website: data.website,
           services: [data.service],
-          phone: null
+          phone: null // Now this is allowed since we made the column nullable
         };
         const {
           error: dbError
