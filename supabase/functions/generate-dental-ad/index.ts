@@ -52,21 +52,23 @@ serve(async (req) => {
 
     Create a compelling Google Ad that follows these STRICT requirements:
     - Generate exactly 3 headlines that follow this format:
-      1. First headline MUST be practice name followed by "Dental" or "Dentistry" (max 25 chars)
-      2. Second headline should be a clear, simple offer or benefit (max 25 chars)
-      3. Third headline should be a simple, direct service or call to action (max 25 chars)
+      1. First headline MUST be practice name followed by "Dental" (max 25 chars)
+      2. Second headline MUST focus on value offer like "Free X-ray & Consult" (max 25 chars)
+      3. Third headline MUST be a strong call to action like "Book Your Visit Today" (max 25 chars)
     - Headlines MUST:
       - Be complete phrases (no truncation)
-      - Use simple, concise words (e.g., "Kids" instead of "Pediatric")
+      - Use simple, concise words
       - Have NO colons, exclamation marks, or unnecessary punctuation
       - Each be under 25 characters
+      - Avoid generic service names alone (e.g., not just "Dental Implants")
     - Generate exactly 1 description that:
       - Is action-oriented and complete
       - Uses simple, clear language
-      - Includes a call to action
+      - Includes a clear benefit and call to action
       - Must be 85 characters or less
+      - Must NOT be cut off mid-word or sentence
+      - Focus on the main service benefit rather than amenities
     - Use the website as the display URL
-    - Focus on the selected services
 
     Format the response as a JSON object with these exact keys:
     {
@@ -144,11 +146,17 @@ serve(async (req) => {
           .replace(/[.:!?]+$/, '') // Remove trailing punctuation
           .replace(/\s*:\s*/g, ' ') // Remove colons
           .replace(/\s+/g, ' ') // Normalize spaces
+          .replace(/[^\w\s&-]/g, '') // Remove special characters except & and -
           .trim();
         
-        // Ensure first headline includes "Dental" or "Dentistry" if it doesn't
-        if (index === 0 && !clean.toLowerCase().includes('dental') && !clean.toLowerCase().includes('dentistry')) {
-          clean = clean + ' Dental';
+        // Ensure first headline includes "Dental" if it doesn't
+        if (index === 0 && !clean.toLowerCase().includes('dental')) {
+          clean = `${clean} Dental`;
+        }
+
+        // Ensure third headline has a call to action if it doesn't
+        if (index === 2 && !clean.toLowerCase().includes('book') && !clean.toLowerCase().includes('call') && !clean.toLowerCase().includes('visit')) {
+          clean = 'Book Your Visit Today';
         }
         
         return clean.length > 25 ? clean.substring(0, 25) : clean;
@@ -156,8 +164,14 @@ serve(async (req) => {
       descriptions: [
         String(adData.descriptions[0])
           .trim()
-          .replace(/\s+/g, ' ')
+          .replace(/\s+/g, ' ') // Normalize spaces
+          .replace(/\.\s*$/, '') // Remove trailing period
+          .replace(/[^\w\s&-.,!]/g, '') // Keep only basic punctuation
           .substring(0, 85)
+          .replace(/\w+$/, match => { // If last word is cut off, remove it
+            return match.length < 3 ? '' : match;
+          })
+          .trim() + '!' // Add exclamation mark for emphasis
       ],
       url: adData.url,
     };
