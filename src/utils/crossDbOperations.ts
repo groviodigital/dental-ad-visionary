@@ -2,15 +2,13 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
-type TableName = keyof Database['public']['Tables'];
-type TableRow<T extends TableName> = Database['public']['Tables'][T]['Row'];
-type TableInsert<T extends TableName> = Database['public']['Tables'][T]['Insert'];
-type TableUpdate<T extends TableName> = Database['public']['Tables'][T]['Update'];
+type Tables = Database['public']['Tables'];
+type DentalPractice = Tables['dental_practices']['Row'];
 
-export const crossDbOperation = async <T extends TableName>(
+export const crossDbOperation = async (
   operation: 'select' | 'insert' | 'update' | 'delete',
-  table: T,
-  data?: any
+  table: 'dental_practices',
+  data?: Partial<DentalPractice> | { updates: Partial<DentalPractice>; id: string }
 ) => {
   try {
     switch (operation) {
@@ -19,33 +17,39 @@ export const crossDbOperation = async <T extends TableName>(
           .from(table)
           .select('*');
         if (selectError) throw selectError;
-        return selectData as TableRow<T>[];
+        return selectData;
         
       case 'insert':
         const { data: insertData, error: insertError } = await supabase
           .from(table)
-          .insert(data as TableInsert<T>)
+          .insert(data)
           .select();
         if (insertError) throw insertError;
-        return insertData as TableRow<T>[];
+        return insertData;
         
       case 'update':
+        if (!data || !('updates' in data) || !('id' in data)) {
+          throw new Error('Invalid update data format');
+        }
         const { data: updateData, error: updateError } = await supabase
           .from(table)
-          .update(data.updates as TableUpdate<T>)
+          .update(data.updates)
           .eq('id', data.id)
           .select();
         if (updateError) throw updateError;
-        return updateData as TableRow<T>[];
+        return updateData;
         
       case 'delete':
+        if (typeof data !== 'string') {
+          throw new Error('Delete operation requires an ID string');
+        }
         const { data: deleteData, error: deleteError } = await supabase
           .from(table)
           .delete()
           .eq('id', data)
           .select();
         if (deleteError) throw deleteError;
-        return deleteData as TableRow<T>[];
+        return deleteData;
         
       default:
         throw new Error(`Unsupported operation: ${operation}`);

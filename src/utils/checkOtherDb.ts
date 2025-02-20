@@ -16,7 +16,7 @@ export const checkOtherDbStructure = async (): Promise<DentalPractice[]> => {
       throw error;
     }
     
-    return practices;
+    return practices || [];
   } catch (error) {
     console.error('Error checking database structure:', error);
     throw error;
