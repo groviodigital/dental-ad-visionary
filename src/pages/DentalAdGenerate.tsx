@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +21,7 @@ interface FormData {
   website: string;
   service: string;
   email?: string;
+  phone?: string;
   keywords: string[];
 }
 
@@ -62,13 +64,23 @@ export default function DentalAdGenerate() {
       });
       return;
     }
-    if (showEmailForm && !data.email) {
-      toast({
-        title: "Error",
-        description: "Please enter your email to receive your ad",
-        variant: "destructive"
-      });
-      return;
+    if (showEmailForm) {
+      if (!data.email) {
+        toast({
+          title: "Error",
+          description: "Please enter your email to receive your ad",
+          variant: "destructive"
+        });
+        return;
+      }
+      if (!data.phone) {
+        toast({
+          title: "Error",
+          description: "Please enter your phone number",
+          variant: "destructive"
+        });
+        return;
+      }
     }
     setIsGenerating(true);
     try {
@@ -90,13 +102,13 @@ export default function DentalAdGenerate() {
         }
       });
       if (error) throw error;
-      if (data.email) {
+      if (data.email && data.phone) {
         const practiceData: DentalPractice = {
           practice_name: data.practiceName,
           email: data.email,
           website: data.website,
           services: [data.service],
-          phone: null
+          phone: data.phone
         };
         const {
           error: dbError
@@ -199,6 +211,18 @@ export default function DentalAdGenerate() {
                   })} className={`mt-1 ${errors.email ? 'border-red-500' : ''}`} placeholder="Enter your email to save your ad" />
                           {errors.email && <span className="text-sm text-red-500">
                               {errors.email.message}
+                            </span>}
+                          
+                          <Label htmlFor="phone">Phone Number *</Label>
+                          <Input id="phone" type="tel" {...register("phone", {
+                    required: "Phone number is required",
+                    pattern: {
+                      value: /^[0-9-+() ]*$/,
+                      message: "Invalid phone number"
+                    }
+                  })} className={`mt-1 ${errors.phone ? 'border-red-500' : ''}`} placeholder="Enter your phone number" />
+                          {errors.phone && <span className="text-sm text-red-500">
+                              {errors.phone.message}
                             </span>}
                         </div>}
                     </> : <div className="text-center py-8">
