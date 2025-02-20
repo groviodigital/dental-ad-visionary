@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
@@ -27,50 +28,17 @@ import type { Database } from "@/integrations/supabase/types";
 const STEPS = ["Practice Info", "Keywords", "Preview"];
 
 const SERVICES = [
-  {
-    name: "General Dentistry",
-    description: "Comprehensive dental care for the whole family",
-  },
-  {
-    name: "Preventive Care",
-    description: "Regular checkups and cleanings to maintain oral health",
-  },
-  {
-    name: "Cosmetic Dentistry",
-    description: "Transform your smile with aesthetic dental procedures",
-  },
-  {
-    name: "Restorative Dentistry",
-    description: "Repair and restore damaged or missing teeth",
-  },
-  {
-    name: "Dental Implants",
-    description: "Permanent solution for missing teeth",
-  },
-  {
-    name: "Orthodontics",
-    description: "Straighten teeth and correct bite issues",
-  },
-  {
-    name: "Pediatric Dentistry",
-    description: "Specialized dental care for children",
-  },
-  {
-    name: "Gum Care",
-    description: "Treatment for periodontal disease and gum health",
-  },
-  {
-    name: "Oral Surgery",
-    description: "Surgical procedures for complex dental issues",
-  },
-  {
-    name: "Emergency Dentistry",
-    description: "Immediate care for dental emergencies",
-  },
-  {
-    name: "Specialty Services",
-    description: "Advanced dental procedures and treatments",
-  },
+  "General Dentistry",
+  "Preventive Care",
+  "Cosmetic Dentistry",
+  "Restorative Dentistry",
+  "Dental Implants",
+  "Orthodontics",
+  "Pediatric Dentistry",
+  "Gum Care",
+  "Oral Surgery",
+  "Emergency Dentistry",
+  "Specialty Services",
 ];
 
 interface FormData {
@@ -248,14 +216,11 @@ export default function DentalAdGenerate() {
                       <SelectContent>
                         {SERVICES.map((service) => (
                           <SelectItem 
-                            key={service.name} 
-                            value={service.name}
+                            key={service} 
+                            value={service}
                             className="cursor-pointer"
                           >
-                            <div>
-                              <div className="font-medium">{service.name}</div>
-                              <div className="text-sm text-gray-500">{service.description}</div>
-                            </div>
+                            {service}
                           </SelectItem>
                         ))}
                       </SelectContent>
