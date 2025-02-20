@@ -86,6 +86,7 @@ interface DentalPractice {
   email: string;
   website: string;
   services: string[];
+  phone?: string; // Make phone optional in the interface
 }
 
 export default function DentalAdGenerate() {
@@ -156,11 +157,12 @@ export default function DentalAdGenerate() {
           email: data.email,
           website: data.website,
           services: [data.service],
+          phone: '', // Add empty string as default value
         };
 
         const { error: dbError } = await supabase
           .from('dental_practices')
-          .insert([practiceData]);
+          .insert(practiceData); // Now passing single object instead of array
 
         if (dbError) throw dbError;
       }
