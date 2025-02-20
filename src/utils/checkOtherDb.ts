@@ -2,16 +2,23 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const checkOtherDbStructure = async () => {
-  const { data, error } = await supabase.functions.invoke('check-other-db', {
-    body: {} // Adding empty body to ensure proper function call
-  });
-  
-  if (error) {
-    console.error('Error checking other DB:', error);
+  try {
+    // Get all tables in the public schema
+    const { data: tables, error } = await supabase
+      .from('dental_practices')
+      .select('*')
+      .limit(1);
+    
+    if (error) {
+      console.error('Error checking database:', error);
+      throw error;
+    }
+    
+    return tables;
+  } catch (error) {
+    console.error('Error checking database structure:', error);
     throw error;
   }
-  
-  return data;
 };
 
 // Initialize window function immediately
@@ -19,5 +26,4 @@ if (typeof window !== 'undefined') {
   (window as any).checkOtherDbStructure = checkOtherDbStructure;
 }
 
-// Export for importing in other files
 export default checkOtherDbStructure;
