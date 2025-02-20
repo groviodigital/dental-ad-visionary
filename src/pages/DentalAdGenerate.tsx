@@ -74,6 +74,14 @@ export default function DentalAdGenerate() {
     },
   });
 
+  // Function to handle going back
+  const handlePrevious = () => {
+    // Reset the generated ad and email form when going back
+    setGeneratedAd(null);
+    setShowEmailForm(false);
+    setCurrentStep((prev) => Math.max(0, prev - 1));
+  };
+
   const onSubmit = async (data: FormData) => {
     if (!data.service) {
       toast({
@@ -293,7 +301,7 @@ export default function DentalAdGenerate() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setCurrentStep((prev) => Math.max(0, prev - 1))}
+                  onClick={handlePrevious}
                   disabled={currentStep === 0}
                   className="border-grovio-teal text-grovio-teal hover:bg-grovio-teal/10"
                 >
