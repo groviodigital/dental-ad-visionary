@@ -20,6 +20,7 @@ interface FormData {
   practiceName: string;
   website: string;
   service: string;
+  location: string;
   email?: string;
   keywords: string[];
 }
@@ -87,6 +88,7 @@ export default function DentalAdGenerate() {
           email: data.email,
           website: data.website,
           selectedServices: [data.service],
+          location: data.location,
           keywords
         }
       });
@@ -97,7 +99,8 @@ export default function DentalAdGenerate() {
           email: data.email,
           website: data.website,
           services: [data.service],
-          phone: null // Now this is allowed since we made the column nullable
+          location: data.location,
+          phone: null
         };
         const {
           error: dbError
@@ -160,6 +163,15 @@ export default function DentalAdGenerate() {
                 })} className="mt-1" placeholder="https://www.yourpractice.com" />
                     {errors.website && <span className="text-sm text-red-500">
                         Website is required
+                      </span>}
+                  </div>
+                  <div>
+                    <Label htmlFor="location">Where are your potential patients?</Label>
+                    <Input id="location" {...register("location", {
+                  required: true
+                })} className="mt-1" placeholder="e.g., Downtown Seattle, WA" />
+                    {errors.location && <span className="text-sm text-red-500">
+                        Location is required
                       </span>}
                   </div>
                   <div>
