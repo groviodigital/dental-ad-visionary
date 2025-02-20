@@ -14,6 +14,10 @@ export const crossDbOperation = async (operation: string, table: string, data?: 
   return result;
 };
 
+// Initialize window function immediately
 if (typeof window !== 'undefined') {
   (window as any).crossDbOperation = crossDbOperation;
 }
+
+// Export for importing in other files
+export default crossDbOperation;
