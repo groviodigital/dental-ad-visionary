@@ -1,9 +1,17 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -13,11 +21,10 @@ import {
 } from "@/components/ui/card";
 import { Loader } from "lucide-react";
 import { StepIndicator } from "@/components/dental/StepIndicator";
-import { ServiceCard } from "@/components/dental/ServiceCard";
 import { AdPreview } from "@/components/dental/AdPreview";
 import { supabase } from "@/integrations/supabase/client";
 
-const STEPS = ["Practice Info", "Services", "Keywords", "Preview"];
+const STEPS = ["Practice Info", "Keywords", "Preview"];
 
 const SERVICES = [
   {
@@ -68,34 +75,35 @@ const SERVICES = [
 
 interface FormData {
   practiceName: string;
-  email: string;
-  phone: string;
   website: string;
+  service: string;
+  email?: string;
   keywords: string[];
 }
 
 interface DentalPractice {
   practice_name: string;
   email: string;
-  phone: string;
   website: string;
   services: string[];
 }
 
 export default function DentalAdGenerate() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedAd, setGeneratedAd] = useState<{
     headlines: string[];
     descriptions: string[];
     url: string;
   } | null>(null);
+  const [showEmailForm, setShowEmailForm] = useState(false);
 
   const { toast } = useToast();
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
@@ -103,31 +111,20 @@ export default function DentalAdGenerate() {
     },
   });
 
-  const handleServiceToggle = (service: string) => {
-    setSelectedServices((prev) =>
-      prev.includes(service)
-        ? prev.filter((s) => s !== service)
-        : prev.length < 3
-        ? [...prev, service]
-        : prev
-    );
-  };
-
-  const formatPhoneNumber = (value: string) => {
-    const digits = value.replace(/\D/g, "");
-    if (digits.length >= 6) {
-      return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
-    } else if (digits.length >= 3) {
-      return `${digits.slice(0, 3)}-${digits.slice(3)}`;
-    }
-    return digits;
-  };
-
   const onSubmit = async (data: FormData) => {
-    if (selectedServices.length === 0) {
+    if (!data.service) {
       toast({
         title: "Error",
-        description: "Please select at least one service",
+        description: "Please select a service",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (showEmailForm && !data.email) {
+      toast({
+        title: "Error",
+        description: "Please enter your email to receive your ad",
         variant: "destructive",
       });
       return;
@@ -145,34 +142,39 @@ export default function DentalAdGenerate() {
         body: {
           practiceName: data.practiceName,
           email: data.email,
-          phone: data.phone,
           website: data.website,
-          selectedServices,
+          selectedServices: [data.service],
           keywords,
         },
       });
 
       if (error) throw error;
 
-      const practiceData: DentalPractice = {
-        practice_name: data.practiceName,
-        email: data.email,
-        phone: data.phone,
-        website: data.website,
-        services: selectedServices,
-      };
+      if (data.email) {
+        const practiceData: DentalPractice = {
+          practice_name: data.practiceName,
+          email: data.email,
+          website: data.website,
+          services: [data.service],
+        };
 
-      const { error: dbError } = await supabase
-        .from('dental_practices')
-        .insert([practiceData]);
+        const { error: dbError } = await supabase
+          .from('dental_practices')
+          .insert([practiceData]);
 
-      if (dbError) throw dbError;
+        if (dbError) throw dbError;
+      }
 
       setGeneratedAd(adData);
-      toast({
-        title: "Success!",
-        description: "Your Google Ad has been generated and practice info saved.",
-      });
+      
+      if (!showEmailForm) {
+        setShowEmailForm(true);
+      } else {
+        toast({
+          title: "Success!",
+          description: "Your Google Ad has been generated and practice info saved.",
+        });
+      }
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -240,72 +242,33 @@ export default function DentalAdGenerate() {
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      {...register("email", {
-                        required: "Email is required",
-                        pattern: {
-                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                          message: "Invalid email address"
-                        }
-                      })}
-                      className={`mt-1 ${errors.email ? 'border-red-500' : ''}`}
-                      placeholder="example@domain.com"
-                    />
-                    {errors.email && (
-                      <span className="text-sm text-red-500">
-                        {errors.email.message}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Phone * (XXX-XXX-XXXX)</Label>
-                    <Input
-                      id="phone"
-                      {...register("phone", {
-                        required: "Phone number is required",
-                        pattern: {
-                          value: /^\d{3}-\d{3}-\d{4}$/,
-                          message: "Phone must match format: XXX-XXX-XXXX"
-                        }
-                      })}
-                      className={`mt-1 ${errors.phone ? 'border-red-500' : ''}`}
-                      placeholder="555-555-5555"
-                      onChange={(e) => {
-                        e.target.value = formatPhoneNumber(e.target.value);
-                      }}
-                    />
-                    {errors.phone && (
-                      <span className="text-sm text-red-500">
-                        {errors.phone.message}
-                      </span>
-                    )}
+                    <Label htmlFor="service">Select a Service</Label>
+                    <Select 
+                      onValueChange={(value) => setValue("service", value)}
+                    >
+                      <SelectTrigger id="service" className="mt-1">
+                        <SelectValue placeholder="Choose a service" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SERVICES.map((service) => (
+                          <SelectItem 
+                            key={service.name} 
+                            value={service.name}
+                            className="cursor-pointer"
+                          >
+                            <div>
+                              <div className="font-medium">{service.name}</div>
+                              <div className="text-sm text-gray-500">{service.description}</div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               )}
 
               {currentStep === 1 && (
-                <div className="animate-fadeIn">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    Select up to 3 services
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {SERVICES.map((service) => (
-                      <ServiceCard
-                        key={service.name}
-                        service={service.name}
-                        description={service.description}
-                        selected={selectedServices.includes(service.name)}
-                        onClick={() => handleServiceToggle(service.name)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {currentStep === 2 && (
                 <div className="space-y-4 animate-fadeIn">
                   <div>
                     <Label>Keywords (up to 3)</Label>
@@ -323,10 +286,35 @@ export default function DentalAdGenerate() {
                 </div>
               )}
 
-              {currentStep === 3 && (
+              {currentStep === 2 && (
                 <div className="animate-fadeIn">
                   {generatedAd ? (
-                    <AdPreview {...generatedAd} />
+                    <>
+                      <AdPreview {...generatedAd} />
+                      {showEmailForm && (
+                        <div className="mt-6 space-y-4">
+                          <Label htmlFor="email">Email *</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            {...register("email", {
+                              required: "Email is required",
+                              pattern: {
+                                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                message: "Invalid email address"
+                              }
+                            })}
+                            className={`mt-1 ${errors.email ? 'border-red-500' : ''}`}
+                            placeholder="Enter your email to save your ad"
+                          />
+                          {errors.email && (
+                            <span className="text-sm text-red-500">
+                              {errors.email.message}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <div className="text-center py-8">
                       <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -350,38 +338,20 @@ export default function DentalAdGenerate() {
                 >
                   Previous
                 </Button>
-                {currentStep < 3 ? (
+                {currentStep < 2 ? (
                   <Button
                     type="button"
                     onClick={() => {
-                      const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-                      const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
-                      const email = (document.getElementById('email') as HTMLInputElement)?.value;
-                      const phone = (document.getElementById('phone') as HTMLInputElement)?.value;
-
-                      if (currentStep === 0) {
-                        if (!email || !emailRegex.test(email)) {
-                          toast({
-                            title: "Error",
-                            description: "Please enter a valid email address",
-                            variant: "destructive",
-                          });
-                          return;
-                        }
-
-                        if (!phone || !phoneRegex.test(phone)) {
-                          toast({
-                            title: "Error",
-                            description: "Please enter a valid phone number (XXX-XXX-XXXX)",
-                            variant: "destructive",
-                          });
-                          return;
-                        }
+                      if (currentStep === 0 && !watch("service")) {
+                        toast({
+                          title: "Error",
+                          description: "Please select a service",
+                          variant: "destructive",
+                        });
+                        return;
                       }
-                      
-                      setCurrentStep((prev) => Math.min(3, prev + 1));
+                      setCurrentStep((prev) => Math.min(2, prev + 1));
                     }}
-                    disabled={currentStep === 1 && selectedServices.length === 0}
                     className="bg-gradient-to-r from-grovio-lime to-grovio-teal text-white hover:opacity-90"
                   >
                     Next
@@ -397,6 +367,8 @@ export default function DentalAdGenerate() {
                         <Loader className="mr-2 h-4 w-4 animate-spin" />
                         Generating
                       </>
+                    ) : showEmailForm ? (
+                      "Save Ad"
                     ) : (
                       "Generate Ad"
                     )}
