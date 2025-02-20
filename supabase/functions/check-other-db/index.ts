@@ -25,16 +25,49 @@ serve(async (req) => {
       OTHER_SUPABASE_ANON_KEY
     );
 
-    // Try to fetch all tables in the public schema
-    const { data, error } = await otherSupabase.rpc('get_schema_info');
-    
-    if (error) {
-      console.error('Error fetching schema:', error);
-      throw error;
+    // Test a dummy user signup
+    const testEmail = `test_${Date.now()}@example.com`;
+    const testPassword = 'testPassword123';
+
+    console.log('Testing user signup...');
+    const { data: authData, error: authError } = await otherSupabase.auth.signUp({
+      email: testEmail,
+      password: testPassword,
+      options: {
+        data: {
+          practice_name: 'Test Practice',
+          website: 'https://test.com',
+          location: 'Test Location'
+        }
+      }
+    });
+
+    if (authError) {
+      console.error('Auth error:', authError);
+      throw new Error(`Cannot create users: ${authError.message}`);
     }
 
+    // Check if we can access and write to necessary tables
+    console.log('Testing table access...');
+    const tableChecks = await Promise.all([
+      otherSupabase.from('dental_practices').select('*').limit(1),
+      otherSupabase.from('campaigns').select('*').limit(1).catch(e => ({ error: e })),
+      otherSupabase.from('ads').select('*').limit(1).catch(e => ({ error: e }))
+    ]);
+
+    const accessResults = {
+      userCreation: !!authData,
+      tables: {
+        dental_practices: !tableChecks[0].error,
+        campaigns: !tableChecks[1].error,
+        ads: !tableChecks[2].error
+      }
+    };
+
+    console.log('Access check results:', accessResults);
+
     return new Response(
-      JSON.stringify({ tables: data }),
+      JSON.stringify(accessResults),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
