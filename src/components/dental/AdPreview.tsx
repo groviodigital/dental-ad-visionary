@@ -1,25 +1,22 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Monitor, Smartphone } from "lucide-react";
-
 interface AdPreviewProps {
   headlines: string[];
   descriptions: string[];
   url: string;
 }
-
-export const AdPreview = ({ headlines, descriptions, url }: AdPreviewProps) => {
+export const AdPreview = ({
+  headlines,
+  descriptions,
+  url
+}: AdPreviewProps) => {
   const [view, setView] = useState<"desktop" | "mobile">("desktop");
-
   const formatUrl = (url: string) => {
     return url.replace(/^https?:\/\//, "").replace(/\/$/, "");
   };
-
   const displayUrl = formatUrl(url);
-
-  return (
-    <div className="w-full max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6 animate-fadeIn">
+  return <div className="w-full max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6 animate-fadeIn">
       <Tabs defaultValue="desktop" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger value="desktop" onClick={() => setView("desktop")}>
@@ -38,7 +35,7 @@ export const AdPreview = ({ headlines, descriptions, url }: AdPreviewProps) => {
             {/* Google Search Bar */}
             <div className="bg-white border-b px-6 py-3">
               <div className="flex items-center max-w-[632px]">
-                <img src="/lovable-uploads/c210e479-b641-439a-828d-aa2f6c492ee9.png" alt="Google Logo" className="h-7 mr-4" />
+                <img alt="Google Logo" className="h-7 mr-4" src="/lovable-uploads/e066d717-27c0-45f1-bebd-b4759e7b5112.png" />
                 <div className="flex-1 bg-white border rounded-full px-4 py-2 shadow-sm">
                   <div className="text-sm text-gray-600">dentist near me</div>
                 </div>
@@ -68,26 +65,17 @@ export const AdPreview = ({ headlines, descriptions, url }: AdPreviewProps) => {
                 {/* Headlines */}
                 <div className="mb-1">
                   <h3 className="text-[20px] leading-6 text-[#1a0dab] font-normal inline">
-                    {headlines.map((headline, index) => (
-                      <span key={index}>
+                    {headlines.map((headline, index) => <span key={index}>
                         {headline}
-                        {index < headlines.length - 1 && (
-                          <span className="text-gray-500 mx-1">|</span>
-                        )}
-                      </span>
-                    ))}
+                        {index < headlines.length - 1 && <span className="text-gray-500 mx-1">|</span>}
+                      </span>)}
                   </h3>
                 </div>
                 {/* Descriptions */}
                 <div>
-                  {descriptions.map((description, index) => (
-                    <p 
-                      key={index} 
-                      className="text-[14px] text-[#4d5156] leading-5 break-words"
-                    >
+                  {descriptions.map((description, index) => <p key={index} className="text-[14px] text-[#4d5156] leading-5 break-words">
                       {description}
-                    </p>
-                  ))}
+                    </p>)}
                 </div>
               </div>
             </div>
@@ -137,31 +125,21 @@ export const AdPreview = ({ headlines, descriptions, url }: AdPreviewProps) => {
               {/* Headlines */}
               <div className="mb-1">
                 <h3 className="text-[16px] leading-5 text-[#1a0dab] font-normal inline">
-                  {headlines.map((headline, index) => (
-                    <span key={index}>
+                  {headlines.map((headline, index) => <span key={index}>
                       {headline}
-                      {index < headlines.length - 1 && (
-                        <span className="text-gray-500 mx-1">|</span>
-                      )}
-                    </span>
-                  ))}
+                      {index < headlines.length - 1 && <span className="text-gray-500 mx-1">|</span>}
+                    </span>)}
                 </h3>
               </div>
               {/* Descriptions */}
               <div>
-                {descriptions.map((description, index) => (
-                  <p 
-                    key={index} 
-                    className="text-[13px] text-[#4d5156] leading-5 break-words"
-                  >
+                {descriptions.map((description, index) => <p key={index} className="text-[13px] text-[#4d5156] leading-5 break-words">
                     {description}
-                  </p>
-                ))}
+                  </p>)}
               </div>
             </div>
           </div>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
