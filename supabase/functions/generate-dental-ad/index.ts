@@ -12,12 +12,6 @@ const corsHeaders = {
   'Content-Type': 'application/json',
 };
 
-// Helper function to trim text to specified length
-function trimText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength - 3) + '...';
-}
-
 // Helper function to clean and format JSON text
 function cleanJsonText(text: string): string {
   // Remove any potential markdown code blocks
@@ -57,7 +51,12 @@ serve(async (req) => {
     ${keywords?.length ? `Target Keywords: ${keywords.join(', ')}` : ''}
 
     Create a compelling Google Ad that follows these STRICT requirements:
-    - Generate exactly 3 short headlines (each MUST be 25 characters or less)
+    - Generate exactly 3 headlines that follow this format:
+      1. First headline should include the practice name (max 25 chars)
+      2. Second headline should highlight a key benefit or offer (max 25 chars)
+      3. Third headline should focus on a service or call to action (max 25 chars)
+    - Each headline should be complete and concise (no ellipsis)
+    - No unnecessary punctuation
     - Generate exactly 1 description (MUST be 85 characters or less)
     - Use the website as the display URL
     - Focus on the selected services
@@ -132,10 +131,15 @@ serve(async (req) => {
       adData.url = website;
     }
 
-    // Format and trim the content to meet requirements
+    // Clean up headlines: remove unnecessary punctuation and ensure they're within length limits
     const formattedData = {
-      headlines: adData.headlines.map(h => trimText(String(h), 30)),
-      descriptions: [trimText(String(adData.descriptions[0]), 90)],
+      headlines: adData.headlines.map(h => {
+        let clean = String(h)
+          .replace(/[.:!?]+$/, '') // Remove trailing punctuation
+          .trim();
+        return clean.length > 25 ? clean.substring(0, 25) : clean;
+      }),
+      descriptions: [String(adData.descriptions[0]).trim().substring(0, 85)],
       url: adData.url,
     };
 
