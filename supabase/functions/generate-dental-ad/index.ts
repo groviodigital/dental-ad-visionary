@@ -52,15 +52,21 @@ serve(async (req) => {
 
     Create a compelling Google Ad that follows these STRICT requirements:
     - Generate exactly 3 headlines that follow this format:
-      1. First headline should include the practice name (max 25 chars)
-      2. Second headline should highlight a key benefit or offer (max 25 chars)
-      3. Third headline should focus on a service or call to action (max 25 chars)
-    - Each headline should be complete and concise (no ellipsis)
-    - No unnecessary punctuation
-    - Generate exactly 1 description (MUST be 85 characters or less)
+      1. First headline MUST be practice name followed by "Dental" or "Dentistry" (max 25 chars)
+      2. Second headline should be a clear, simple offer or benefit (max 25 chars)
+      3. Third headline should be a simple, direct service or call to action (max 25 chars)
+    - Headlines MUST:
+      - Be complete phrases (no truncation)
+      - Use simple, concise words (e.g., "Kids" instead of "Pediatric")
+      - Have NO colons, exclamation marks, or unnecessary punctuation
+      - Each be under 25 characters
+    - Generate exactly 1 description that:
+      - Is action-oriented and complete
+      - Uses simple, clear language
+      - Includes a call to action
+      - Must be 85 characters or less
     - Use the website as the display URL
     - Focus on the selected services
-    - Include a clear call to action
 
     Format the response as a JSON object with these exact keys:
     {
@@ -131,15 +137,28 @@ serve(async (req) => {
       adData.url = website;
     }
 
-    // Clean up headlines: remove unnecessary punctuation and ensure they're within length limits
+    // Clean up and optimize headlines
     const formattedData = {
-      headlines: adData.headlines.map(h => {
+      headlines: adData.headlines.map((h, index) => {
         let clean = String(h)
           .replace(/[.:!?]+$/, '') // Remove trailing punctuation
+          .replace(/\s*:\s*/g, ' ') // Remove colons
+          .replace(/\s+/g, ' ') // Normalize spaces
           .trim();
+        
+        // Ensure first headline includes "Dental" or "Dentistry" if it doesn't
+        if (index === 0 && !clean.toLowerCase().includes('dental') && !clean.toLowerCase().includes('dentistry')) {
+          clean = clean + ' Dental';
+        }
+        
         return clean.length > 25 ? clean.substring(0, 25) : clean;
       }),
-      descriptions: [String(adData.descriptions[0]).trim().substring(0, 85)],
+      descriptions: [
+        String(adData.descriptions[0])
+          .trim()
+          .replace(/\s+/g, ' ')
+          .substring(0, 85)
+      ],
       url: adData.url,
     };
 
