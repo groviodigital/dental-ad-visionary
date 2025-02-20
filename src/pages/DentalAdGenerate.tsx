@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +22,7 @@ import { Loader } from "lucide-react";
 import { StepIndicator } from "@/components/dental/StepIndicator";
 import { AdPreview } from "@/components/dental/AdPreview";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 const STEPS = ["Practice Info", "Keywords", "Preview"];
 
@@ -81,13 +81,7 @@ interface FormData {
   keywords: string[];
 }
 
-interface DentalPractice {
-  practice_name: string;
-  email: string;
-  website: string;
-  services: string[];
-  phone?: string; // Make phone optional in the interface
-}
+type DentalPractice = Database['public']['Tables']['dental_practices']['Insert'];
 
 export default function DentalAdGenerate() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -157,12 +151,12 @@ export default function DentalAdGenerate() {
           email: data.email,
           website: data.website,
           services: [data.service],
-          phone: '', // Add empty string as default value
+          phone: null // Set to null since it's optional
         };
 
         const { error: dbError } = await supabase
           .from('dental_practices')
-          .insert(practiceData); // Now passing single object instead of array
+          .insert(practiceData);
 
         if (dbError) throw dbError;
       }
