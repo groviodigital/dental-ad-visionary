@@ -7,6 +7,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import DentalAdGenerate from "./pages/DentalAdGenerate";
+// Import our utilities to ensure they're initialized
+import "@/utils/crossDbOperations";
+import "@/utils/checkOtherDb";
 
 const queryClient = new QueryClient();
 
