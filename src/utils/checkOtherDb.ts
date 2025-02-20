@@ -11,3 +11,7 @@ export const checkOtherDbStructure = async () => {
   
   return data;
 };
+
+if (typeof window !== 'undefined') {
+  (window as any).checkOtherDbStructure = checkOtherDbStructure;
+}
