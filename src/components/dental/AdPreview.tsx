@@ -88,7 +88,7 @@ export const AdPreview = ({
             {/* Mobile Search Bar */}
             <div className="bg-white border-b px-4 py-2">
               <div className="flex items-center">
-                <img src="/lovable-uploads/c210e479-b641-439a-828d-aa2f6c492ee9.png" alt="Google Logo" className="h-6 mr-3" />
+                <img alt="Google Logo" className="h-6 mr-3" src="/lovable-uploads/75c86064-d2fa-4dbb-8993-e66d462adc32.png" />
                 <div className="flex-1 bg-gray-100 rounded-full px-3 py-1.5">
                   <div className="text-xs text-gray-600">dentist near me</div>
                 </div>
