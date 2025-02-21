@@ -4,13 +4,11 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Tables = Database['public']['Tables'];
 type DentalPractice = Tables['dental_practices']['Row'];
-type DentalPracticeInsert = Tables['dental_practices']['Insert'];
-type DentalPracticeUpdate = Tables['dental_practices']['Update'];
 
 export const crossDbOperation = async (
   operation: 'select' | 'insert' | 'update' | 'delete',
   table: 'dental_practices',
-  data?: DentalPracticeInsert | { updates: DentalPracticeUpdate; id: string } | string
+  data?: Partial<DentalPractice> | { updates: Partial<DentalPractice>; id: string }
 ) => {
   try {
     switch (operation) {
@@ -22,9 +20,6 @@ export const crossDbOperation = async (
         return selectData;
         
       case 'insert':
-        if (!data || typeof data === 'string' || 'updates' in data) {
-          throw new Error('Invalid insert data format');
-        }
         const { data: insertData, error: insertError } = await supabase
           .from(table)
           .insert(data)
@@ -33,7 +28,7 @@ export const crossDbOperation = async (
         return insertData;
         
       case 'update':
-        if (!data || typeof data === 'string' || !('updates' in data)) {
+        if (!data || !('updates' in data) || !('id' in data)) {
           throw new Error('Invalid update data format');
         }
         const { data: updateData, error: updateError } = await supabase
