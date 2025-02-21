@@ -2,13 +2,16 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
-type Tables = Database['public']['Tables'];
-type DentalPractice = Tables['dental_practices']['Row'];
+type DentalPractice = Database['public']['Tables']['dental_practices'];
+
+// These types ensure we maintain the required fields from Supabase
+type InsertData = DentalPractice['Insert'];
+type UpdateData = DentalPractice['Update'];
 
 export const crossDbOperation = async (
   operation: 'select' | 'insert' | 'update' | 'delete',
   table: 'dental_practices',
-  data?: Partial<DentalPractice> | { updates: Partial<DentalPractice>; id: string }
+  data?: InsertData | { updates: UpdateData; id: string } | string
 ) => {
   try {
     switch (operation) {
@@ -18,27 +21,28 @@ export const crossDbOperation = async (
           .select('*');
         if (selectError) throw selectError;
         return selectData;
-        
+
       case 'insert':
+        if (!data || typeof data === 'string' || 'updates' in data) {
+          throw new Error('Invalid insert data format');
+        }
         const { data: insertData, error: insertError } = await supabase
           .from(table)
-          .insert(data)
-          .select();
+          .insert(data);
         if (insertError) throw insertError;
         return insertData;
-        
+
       case 'update':
-        if (!data || !('updates' in data) || !('id' in data)) {
+        if (!data || typeof data === 'string' || !('updates' in data)) {
           throw new Error('Invalid update data format');
         }
         const { data: updateData, error: updateError } = await supabase
           .from(table)
           .update(data.updates)
-          .eq('id', data.id)
-          .select();
+          .eq('id', data.id);
         if (updateError) throw updateError;
         return updateData;
-        
+
       case 'delete':
         if (typeof data !== 'string') {
           throw new Error('Delete operation requires an ID string');
@@ -46,11 +50,10 @@ export const crossDbOperation = async (
         const { data: deleteData, error: deleteError } = await supabase
           .from(table)
           .delete()
-          .eq('id', data)
-          .select();
+          .eq('id', data);
         if (deleteError) throw deleteError;
         return deleteData;
-        
+
       default:
         throw new Error(`Unsupported operation: ${operation}`);
     }
