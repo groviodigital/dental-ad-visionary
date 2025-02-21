@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
@@ -12,10 +11,8 @@ import { StepIndicator } from "@/components/dental/StepIndicator";
 import { AdPreview } from "@/components/dental/AdPreview";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-
 const STEPS = ["Practice Info", "Keywords", "Preview"];
 const SERVICES = ["General Dentistry", "Preventive Care", "Cosmetic Dentistry", "Restorative Dentistry", "Dental Implants", "Orthodontics", "Pediatric Dentistry", "Gum Care", "Oral Surgery", "Emergency Dentistry", "Specialty Services"];
-
 interface FormData {
   practiceName: string;
   website: string;
@@ -24,9 +21,7 @@ interface FormData {
   email?: string;
   keywords: string[];
 }
-
 type DentalPractice = Database['public']['Tables']['dental_practices']['Insert'];
-
 export default function DentalAdGenerate() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -36,25 +31,27 @@ export default function DentalAdGenerate() {
     url: string;
   } | null>(null);
   const [showEmailForm, setShowEmailForm] = useState(false);
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const {
     register,
     handleSubmit,
     setValue,
     watch,
-    formState: { errors }
+    formState: {
+      errors
+    }
   } = useForm<FormData>({
     defaultValues: {
       keywords: ["", "", ""]
     }
   });
-
   const handlePrevious = () => {
     setGeneratedAd(null);
     setShowEmailForm(false);
     setCurrentStep(prev => Math.max(0, prev - 1));
   };
-
   const onSubmit = async (data: FormData) => {
     if (!data.service) {
       toast({
@@ -127,7 +124,6 @@ export default function DentalAdGenerate() {
       setIsGenerating(false);
     }
   };
-
   return <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <Card className="w-full">
@@ -138,9 +134,7 @@ export default function DentalAdGenerate() {
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-grovio-lime to-grovio-teal bg-clip-text text-transparent">
               Dental Google Ad Generator
             </CardTitle>
-            <CardDescription className="mt-2 text-gray-600">
-              Grow your vision with precision
-            </CardDescription>
+            <CardDescription className="mt-2 text-gray-600"></CardDescription>
           </CardHeader>
           <CardContent>
             <StepIndicator currentStep={currentStep} steps={STEPS} />
