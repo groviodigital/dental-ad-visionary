@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
@@ -66,18 +65,16 @@ export default function DentalAdGenerate() {
       return;
     }
 
-    if (showEmailDialog && !data.email) {
-      toast({
-        title: "Error",
-        description: "Please enter your email to receive your ad",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsGenerating(true);
     try {
-      const keywords = data.keywords.filter(Boolean);
+      console.log("Generating ad with data:", {
+        practiceName: data.practiceName,
+        website: data.website,
+        selectedServices: [data.service],
+        location: data.location,
+        keywords: data.keywords.filter(Boolean)
+      });
+
       const { data: adData, error } = await supabase.functions.invoke<{
         headlines: string[];
         descriptions: string[];
@@ -85,17 +82,28 @@ export default function DentalAdGenerate() {
       }>('generate-dental-ad', {
         body: {
           practiceName: data.practiceName,
-          email: data.email,
           website: data.website,
           selectedServices: [data.service],
           location: data.location,
-          keywords
+          keywords: data.keywords.filter(Boolean)
         }
       });
 
-      if (error) throw error;
+      console.log("Edge function response:", { adData, error });
 
-      if (data.email) {
+      if (error) {
+        console.error("Edge function error:", error);
+        throw error;
+      }
+
+      if (!adData || !adData.headlines || !adData.descriptions) {
+        throw new Error("Invalid response from ad generator");
+      }
+
+      setGeneratedAd(adData);
+
+      // Only handle email submission if the dialog is open
+      if (showEmailDialog && data.email) {
         const practiceData: DentalPractice = {
           practice_name: data.practiceName,
           email: data.email,
@@ -104,25 +112,28 @@ export default function DentalAdGenerate() {
           location: data.location,
           phone: null
         };
+        
+        console.log("Saving practice data:", practiceData);
         const { error: dbError } = await supabase.from('dental_practices').insert(practiceData);
-        if (dbError) throw dbError;
-      }
+        
+        if (dbError) {
+          console.error("Database error:", dbError);
+          throw dbError;
+        }
 
-      setGeneratedAd(adData);
-      if (!showEmailDialog) {
-        setShowEmailDialog(true);
-      } else {
         toast({
           title: "Success!",
           description: "Your Google Ad has been generated and practice info saved."
         });
         setShowEmailDialog(false);
+      } else if (!showEmailDialog) {
+        setShowEmailDialog(true);
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error in ad generation:', error);
       toast({
         title: "Error",
-        description: "Failed to generate ad. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to generate ad. Please try again.",
         variant: "destructive"
       });
     } finally {
