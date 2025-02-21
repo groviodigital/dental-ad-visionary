@@ -28,7 +28,8 @@ export const crossDbOperation = async (
         }
         const { data: insertData, error: insertError } = await supabase
           .from(table)
-          .insert(data);
+          .insert(data)
+          .select();
         if (insertError) throw insertError;
         return insertData;
 
@@ -39,7 +40,8 @@ export const crossDbOperation = async (
         const { data: updateData, error: updateError } = await supabase
           .from(table)
           .update(data.updates)
-          .eq('id', data.id);
+          .eq('id', data.id)
+          .select();
         if (updateError) throw updateError;
         return updateData;
 
@@ -50,7 +52,8 @@ export const crossDbOperation = async (
         const { data: deleteData, error: deleteError } = await supabase
           .from(table)
           .delete()
-          .eq('id', data);
+          .eq('id', data)
+          .select();
         if (deleteError) throw deleteError;
         return deleteData;
 
